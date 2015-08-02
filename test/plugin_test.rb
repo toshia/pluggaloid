@@ -11,18 +11,22 @@ describe(Pluggaloid::Plugin) do
     Pluggaloid::Plugin.clear!
   end
 
-  it "basic plugin" do
+  def eval_all_events
+    native = Thread.list
+    yield if block_given?
+    Delayer.run while not(Delayer.empty? and (Thread.list - native).empty?)
+  end
+
+  it "fire and filtering event, receive a plugin" do
     sum = 0
     Pluggaloid::Plugin.create(:event) do
       on_increase do |v|
         sum += v end
 
       filter_increase do |v|
-        [v * 2]
-      end
-    end
-    Pluggaloid::Event[:increase].call(1)
-    Delayer.run while not Delayer.empty?
+        [v * 2] end end
+    eval_all_events do
+      Pluggaloid::Event[:increase].call(1) end
     assert_equal(2, sum)
   end
 
@@ -34,22 +38,18 @@ describe(Pluggaloid::Plugin) do
 
       filter_thread do
         filter_thread = Thread.current
-        []
-      end
-    end
-    Pluggaloid::Event[:thread].call
-    Delayer.run while not Delayer.empty?
+        [] end end
+    eval_all_events do
+      Pluggaloid::Event[:thread].call end
     assert filter_thread
     assert_equal Thread.current, filter_thread
 
     Pluggaloid::Event.filter_another_thread = true
     filter_thread = nil
-    native = Thread.list
-    Pluggaloid::Event[:thread].call
-
-    Delayer.run while not(Delayer.empty? and (Thread.list - native).empty?)
-    assert filter_thread
-    refute_equal Thread.current, filter_thread
+    eval_all_events do
+      Pluggaloid::Event[:thread].call end
+    assert filter_thread, "The filter doesn't run."
+    refute_equal Thread.current, filter_thread, 'The filter should execute in not a main thread'
   end
 
   it "uninstall" do
@@ -58,12 +58,10 @@ describe(Pluggaloid::Plugin) do
       on_increase do |v|
         sum += v end
       filter_increase do |v|
-        [v * 2]
-      end
-    end
-    Pluggaloid::Plugin.create(:event).uninstall
-    Pluggaloid::Event[:increase].call(1)
-    Delayer.run while not Delayer.empty?
+        [v * 2] end end
+    eval_all_events do
+      Pluggaloid::Plugin.create(:event).uninstall
+      Pluggaloid::Event[:increase].call(1) end
     assert_equal(0, sum)
   end
 
@@ -74,30 +72,28 @@ describe(Pluggaloid::Plugin) do
       event = on_increase do |v|
         sum += v end
       filter = filter_increase do |v|
-        [v * 2]
-      end
-    end
-    Pluggaloid::Event[:increase].call(1)
-    Delayer.run while not Delayer.empty?
-    assert_equal(2, sum)
+        [v * 2] end end
+    eval_all_events do
+      Pluggaloid::Event[:increase].call(1) end
+    assert_equal(2, sum, "It should execute filter when event called")
 
-    Pluggaloid::Plugin.create(:event).detach filter
-    Pluggaloid::Event[:increase].call(1)
-    Delayer.run while not Delayer.empty?
-    assert_equal(3, sum)
+    eval_all_events do
+      Pluggaloid::Plugin[:event].detach filter
+      Pluggaloid::Event[:increase].call(1) end
+    assert_equal(3, sum, "It should not execute detached filter when event called")
 
-    Pluggaloid::Plugin.create(:event).detach event
-    Pluggaloid::Event[:increase].call(1)
-    Delayer.run while not Delayer.empty?
-    assert_equal(3, sum)
+    eval_all_events do
+      Pluggaloid::Plugin.create(:event).detach event
+      Pluggaloid::Event[:increase].call(1) end
+    assert_equal(3, sum, "It should not executed detached event")
   end
 
   it "get plugin list" do
-    assert_equal([], Pluggaloid::Plugin.plugin_list)
+    assert_empty(Pluggaloid::Plugin.plugin_list, "Plugin list must empty in first time")
     Pluggaloid::Plugin.create(:plugin_0)
-    assert_equal([:plugin_0], Pluggaloid::Plugin.plugin_list)
+    assert_equal(%i<plugin_0>, Pluggaloid::Plugin.plugin_list, "The new plugin should appear plugin list")
     Pluggaloid::Plugin.create(:plugin_1)
-    assert_equal([:plugin_0, :plugin_1], Pluggaloid::Plugin.plugin_list)
+    assert_equal(%i<plugin_0 plugin_1>, Pluggaloid::Plugin.plugin_list, "The new plugin should appear plugin list")
   end
 
   it "dsl method defevent" do
@@ -119,28 +115,25 @@ describe(Pluggaloid::Plugin) do
     assert_equal(value, 3)
   end
 
-  it "simple dsl" do
-    Pluggaloid::Plugin.create :dsl_def do
-      defdsl :twice do |number|
-        number * 2
-      end
+  describe "defdsl" do
+    it "simple dsl" do
+      Pluggaloid::Plugin.create :dsl_def do
+        defdsl :twice do |number|
+          number * 2 end end
+
+      dsl_use = Pluggaloid::Plugin[:dsl_use]
+      assert_equal(4, dsl_use.twice(2))
+      assert_equal(0, dsl_use.twice(0))
+      assert_equal(-26, dsl_use.twice(-13))
     end
 
-    dsl_use = Pluggaloid::Plugin.create(:dsl_use)
-    assert_equal(4, dsl_use.twice(2))
-    assert_equal(0, dsl_use.twice(0))
-    assert_equal(-26, dsl_use.twice(-13))
-  end
+    it "callback dsl" do
+      Pluggaloid::Plugin.create :dsl_def do
+        defdsl :rejector do |value, &condition|
+          value.reject(&condition) end end
 
-  it "callback dsl" do
-    Pluggaloid::Plugin.create :dsl_def do
-      defdsl :rejector do |value, &condition|
-        value.reject(&condition)
-      end
+      dsl_use = Pluggaloid::Plugin.create(:dsl_use)
+      assert_equal([2, 4, 6], dsl_use.rejector(1..6){ |d| 0 != (d & 1) })
     end
-
-    dsl_use = Pluggaloid::Plugin.create(:dsl_use)
-    assert_equal([2, 4, 6], dsl_use.rejector(1..6){ |d| 0 != (d & 1) })
   end
-
 end
