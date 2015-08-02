@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
-require 'observer'
-
 class Pluggaloid::Event
-  include Observable
   include InstanceStorage
 
   # オプション。以下のキーを持つHash
@@ -17,6 +14,7 @@ class Pluggaloid::Event
   def initialize(*args)
     super
     @options = {}
+    @listeners = []
     @filters = [] end
 
   # イベントの優先順位を取得する
@@ -40,20 +38,17 @@ class Pluggaloid::Event
     if self.class.filter_another_thread
       if @filters.empty?
         delayer.new(*Array(priority)) do
-          changed
-          catch(:plugin_exit){ notify_observers(*args) } end
+        call_all_listeners(args) end
       else
         Thread.new do
           filtered_args = filtering(*args)
           if filtered_args.is_a? Array
             delayer.new(*Array(priority)) do
-              changed
-              catch(:plugin_exit){ notify_observers(*filtered_args) } end end end end
+              call_all_listeners(filtered_args) end end end end
     else
       delayer.new(*Array(priority)) do
-        changed
         args = filtering(*args) if not @filters.empty?
-        catch(:plugin_exit){ notify_observers(*args) } if args.is_a? Array end end end
+        call_all_listeners(args) if args.is_a? Array end end end
 
   # 引数 _args_ をフィルタリングした結果を返す
   # ==== Args
@@ -65,6 +60,16 @@ class Pluggaloid::Event
       @filters.reduce(args){ |acm, event_filter|
         event_filter.filtering(*acm) } } end
 
+  def add_listener(listener)
+    unless listener.is_a? Pluggaloid::Listener
+      raise Pluggaloid::ArgumentError, "First argument must be Pluggaloid::Listener, but given #{listener.class}." end
+    @listeners << listener
+    self end
+
+  def delete_listener(event_filter)
+    @listeners.delete(event_filter)
+    self end
+
   # イベントフィルタを追加する
   # ==== Args
   # [event_filter] イベントフィルタ(Filter)
@@ -72,7 +77,7 @@ class Pluggaloid::Event
   # self
   def add_filter(event_filter)
     unless event_filter.is_a? Pluggaloid::Filter
-      raise Pluggaloid::ArgumentError end
+      raise Pluggaloid::ArgumentError, "First argument must be Pluggaloid::Filter, but given #{event_filter.class}." end
     @filters << event_filter
     self end
 
@@ -84,6 +89,12 @@ class Pluggaloid::Event
   def delete_filter(event_filter)
     @filters.delete(event_filter)
     self end
+
+  private
+  def call_all_listeners(args)
+    catch(:plugin_exit) do
+      @listeners.each do |listener|
+        listener.call(*args) end end end
 
   class << self
     attr_accessor :filter_another_thread
