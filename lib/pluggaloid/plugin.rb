@@ -14,12 +14,14 @@ module Pluggaloid
 
       def vm
         raise Pluggaloid::NoDefaultDelayerError, "Default Delayer was not set." unless Delayer.default
-        @vm ||= Pluggaloid::VM.new(
-          Delayer.default,
-          self,
-          Pluggaloid::Event,
-          Pluggaloid::Listener,
-          Pluggaloid::Filter) end
+        @vm ||= begin
+                  vm = Pluggaloid::VM.new(
+                    Delayer.default,
+                    self,
+                    Pluggaloid::Event,
+                    Pluggaloid::Listener,
+                    Pluggaloid::Filter)
+                  vm.Event.vm = vm end end
 
       # プラグインのインスタンスを返す。
       # ブロックが渡された場合、そのブロックをプラグインのインスタンスのスコープで実行する

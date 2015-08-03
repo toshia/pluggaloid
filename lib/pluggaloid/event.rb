@@ -17,17 +17,15 @@ class Pluggaloid::Event
     @listeners = []
     @filters = [] end
 
+  def vm
+    self.class.vm end
+
   # イベントの優先順位を取得する
   # ==== Return
   # プラグインの優先順位
   def priority
     if @options.has_key? :priority
       @options[:priority] end end
-
-  def delayer
-    raise Pluggaloid::NoDefautDelayerError, "Default Delayer was not set." unless Delayer.default
-    Delayer.default
-  end
 
   # イベントを引数 _args_ で発生させる
   # ==== Args
@@ -37,16 +35,16 @@ class Pluggaloid::Event
   def call(*args)
     if self.class.filter_another_thread
       if @filters.empty?
-        delayer.new(*Array(priority)) do
+        vm.delayer.new(*Array(priority)) do
         call_all_listeners(args) end
       else
         Thread.new do
           filtered_args = filtering(*args)
           if filtered_args.is_a? Array
-            delayer.new(*Array(priority)) do
+            vm.Delayer.new(*Array(priority)) do
               call_all_listeners(filtered_args) end end end end
     else
-      delayer.new(*Array(priority)) do
+      vm.Delayer.new(*Array(priority)) do
         args = filtering(*args) if not @filters.empty?
         call_all_listeners(args) if args.is_a? Array end end end
 
@@ -97,7 +95,7 @@ class Pluggaloid::Event
         listener.call(*args) end end end
 
   class << self
-    attr_accessor :filter_another_thread
+    attr_accessor :filter_another_thread, :vm
 
     alias __clear_aF4e__ clear!
     def clear!
