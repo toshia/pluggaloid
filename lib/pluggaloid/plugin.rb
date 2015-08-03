@@ -13,8 +13,8 @@ module Pluggaloid
       attr_writer :vm
 
       def vm
-        raise Pluggaloid::NoDefaultDelayerError, "Default Delayer was not set." unless Delayer.default
         @vm ||= begin
+                  raise Pluggaloid::NoDefaultDelayerError, "Default Delayer was not set." unless Delayer.default
                   vm = Pluggaloid::VM.new(
                     Delayer.default,
                     self,
@@ -71,7 +71,9 @@ module Pluggaloid
 
       alias __clear_aF4e__ clear!
       def clear!
-        vm.Event.clear!
+        if defined?(@vm) and @vm
+          @vm.Event.clear!
+          @vm = nil end
         __clear_aF4e__() end
     end
 

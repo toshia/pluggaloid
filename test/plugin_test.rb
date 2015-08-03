@@ -136,4 +136,13 @@ describe(Pluggaloid::Plugin) do
       assert_equal([2, 4, 6], dsl_use.rejector(1..6){ |d| 0 != (d & 1) })
     end
   end
+
+  it 'raises NoDefaultDelayerError if Delayer do not have default delayer' do
+    Delayer.default = nil
+    Pluggaloid::Plugin.clear!
+    assert_raises(Pluggaloid::NoDefaultDelayerError) do
+      Pluggaloid::Plugin.create(:raises) do
+        on_no_default_delayer_error do; end end end
+  end
+
 end
