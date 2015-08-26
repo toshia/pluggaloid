@@ -35,7 +35,7 @@ class Pluggaloid::Event
   def call(*args)
     if self.class.filter_another_thread
       if @filters.empty?
-        vm.delayer.new(*Array(priority)) do
+        vm.Delayer.new(*Array(priority)) do
         call_all_listeners(args) end
       else
         Thread.new do

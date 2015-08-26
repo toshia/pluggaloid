@@ -31,10 +31,13 @@ describe(Pluggaloid::Plugin) do
   end
 
   it "filter in another thread" do
-    filter_thread = nil
+    success = filter_thread = nil
     Pluggaloid::Plugin.create(:event) do
       on_thread do
       end
+
+      on_unhandled do
+        success = true end
 
       filter_thread do
         filter_thread = Thread.current
@@ -47,8 +50,10 @@ describe(Pluggaloid::Plugin) do
     Pluggaloid::Event.filter_another_thread = true
     filter_thread = nil
     eval_all_events do
-      Pluggaloid::Event[:thread].call end
+      Pluggaloid::Event[:thread].call
+      Pluggaloid::Event[:unhandled].call end
     assert filter_thread, "The filter doesn't run."
+    assert success, "Event :unhandled doesn't run."
     refute_equal Thread.current, filter_thread, 'The filter should execute in not a main thread'
   end
 
