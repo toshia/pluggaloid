@@ -2,6 +2,7 @@
 
 require 'instance_storage'
 require 'delayer'
+require 'set'
 
 # プラグインの本体。
 # DSLを提供し、イベントやフィルタの管理をする
