@@ -61,6 +61,8 @@ class Pluggaloid::Event
   def add_listener(listener)
     unless listener.is_a? Pluggaloid::Listener
       raise Pluggaloid::ArgumentError, "First argument must be Pluggaloid::Listener, but given #{listener.class}." end
+    if @listeners.map(&:slug).include?(listener.slug)
+      raise Pluggaloid::DuplicateListenerSlugError, "Listener slug #{listener.slug} already exists." end
     @listeners << listener
     self end
 

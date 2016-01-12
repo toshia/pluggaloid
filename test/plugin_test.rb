@@ -150,4 +150,41 @@ describe(Pluggaloid::Plugin) do
         on_no_default_delayer_error do; end end end
   end
 
+  describe "named listener" do
+    it 'raises when duplicate slug registered to equally events' do
+      assert_raises(Pluggaloid::DuplicateListenerSlugError) do
+        Pluggaloid::Plugin.create :duplicate_slug do
+          on_a(slug: :duplicate){}
+          on_a(slug: :duplicate){}
+        end
+      end
+    end
+
+    it 'was not raises when duplicate slug registered to another events' do
+      Pluggaloid::Plugin.create :duplicate_slug do
+        on_a(slug: :duplicate){}
+        on_b(slug: :duplicate){}
+      end
+    end
+
+    it 'successful when dupliacte name registered to another events' do
+      a = b = nil
+      Pluggaloid::Plugin.create :duplicate_name do
+        a = on_a(name: "duplicate"){}
+        b = on_b(name: "duplicate"){}
+      end
+      assert_equal("duplicate", a.name, 'a.name should be "duplicate"')
+      assert_equal("duplicate", b.name, 'b.name should be "duplicate"')
+    end
+
+    it 'include listener slug and name in Pluggaloid::Listener#inspect' do
+      a = nil
+      Pluggaloid::Plugin.create :inspect do
+        a = on_a(slug: :inspect_slug, name: "inspect name"){}
+      end
+      assert(a.inspect.include?("inspect_slug"), 'Pluggaloid::Listener.inspect does not include slug')
+      assert(a.inspect.include?("inspect name"), 'Pluggaloid::Listener.inspect does not include name')
+    end
+  end
+
 end

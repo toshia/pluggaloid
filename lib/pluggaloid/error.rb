@@ -9,4 +9,6 @@ module Pluggaloid
   class FilterError < Error; end
 
   class NoDefaultDelayerError < Error; end
+
+  class DuplicateListenerSlugError < Error; end
 end
