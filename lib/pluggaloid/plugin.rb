@@ -2,6 +2,7 @@
 
 require 'instance_storage'
 require 'delayer'
+require 'securerandom'
 require 'set'
 
 # プラグインの本体。
@@ -101,8 +102,8 @@ module Pluggaloid
     # [&callback] イベントのコールバック
     # ==== Return
     # Pluggaloid::Listener
-    def add_event(event_name, &callback)
-      result = vm.Listener.new(vm.Event[event_name], &callback)
+    def add_event(event_name, name: nil, slug: SecureRandom.uuid.to_sym, &callback)
+      result = vm.Listener.new(vm.Event[event_name], name: name, slug: slug, &callback)
       @events << result
       result end
 
@@ -172,10 +173,10 @@ module Pluggaloid
     # マジックメソッドを追加する。
     # on_?name :: add_event(name)
     # filter_?name :: add_event_filter(name)
-    def method_missing(method, *args, &proc)
+    def method_missing(method, *args, **kwrest, &proc)
       case method.to_s
       when /\Aon_?(.+)\Z/
-        add_event($1.to_sym, &proc)
+        add_event($1.to_sym, *args, **kwrest, &proc)
       when /\Afilter_?(.+)\Z/
         add_event_filter($1.to_sym, &proc)
       when /\Ahook_?(.+)\Z/
