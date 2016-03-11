@@ -4,17 +4,14 @@ require 'bundler/setup'
 require 'minitest/autorun'
 
 require 'pluggaloid'
+require_relative 'helper'
 
 describe(Pluggaloid::Plugin) do
+  include PluggaloidTestHelper
+
   before do
     Delayer.default = Delayer.generate_class(priority: %i<high normal low>, default: :normal)
     Pluggaloid::Plugin.clear!
-  end
-
-  def eval_all_events
-    native = Thread.list
-    yield if block_given?
-    Delayer.run while not(Delayer.empty? and (Thread.list - native).empty?)
   end
 
   it "fire and filtering event, receive a plugin" do

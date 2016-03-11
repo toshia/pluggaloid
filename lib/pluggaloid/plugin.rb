@@ -22,7 +22,8 @@ module Pluggaloid
                     self,
                     Pluggaloid::Event,
                     Pluggaloid::Listener,
-                    Pluggaloid::Filter)
+                    Pluggaloid::Filter,
+                    Pluggaloid::ListenerTag)
                   vm.Event.vm = vm end end
 
       # プラグインのインスタンスを返す。
@@ -99,11 +100,12 @@ module Pluggaloid
     # イベントリスナを新しく登録する
     # ==== Args
     # [event_name] イベント名
+    # [tags:] Pluggaloid::ListenerTag|Array リスナのタグ
     # [&callback] イベントのコールバック
     # ==== Return
     # Pluggaloid::Listener
-    def add_event(event_name, name: nil, slug: SecureRandom.uuid.to_sym, &callback)
-      result = vm.Listener.new(vm.Event[event_name], name: name, slug: slug, &callback)
+    def add_event(event_name, name: nil, slug: SecureRandom.uuid.to_sym, tags: nil, &callback)
+      result = vm.Listener.new(vm.Event[event_name], name: name, slug: slug, tags: tags, &callback)
       @events << result
       result end
 
@@ -118,6 +120,10 @@ module Pluggaloid
       @filters << result
       result end
 
+    def listener_tag(name=SecureRandom.uuid)
+      vm.ListenerTag.new(name: name.to_s, plugin: self)
+    end
+
     # イベントを削除する。
     # 引数は、Pluggaloid::ListenerかPluggaloid::Filterのみ(on_*やfilter_*の戻り値)。
     # 互換性のため、二つ引数がある場合は第一引数は無視され、第二引数が使われる。
@@ -127,12 +133,20 @@ module Pluggaloid
     # self
     def detach(*args)
       listener = args.last
-      if listener.is_a? vm.Listener
+      case listener
+      when vm.Listener
         @events.delete(listener)
         listener.detach
-      elsif listener.is_a? vm.Filter
+      when vm.Filter
         @filters.delete(listener)
-        listener.detach end
+        listener.detach
+      when vm.ListenerTag
+        detach(@events.select{|event| event.tags.include?(listener) })
+      when Enumerable
+        listener.each(&method(:detach))
+      else
+        raise ArgumentError, "Argument must be Pluggaloid::Listener, Pluggaloid::Filter, Pluggaloid::ListenerTag or Enumerable. But given #{listener.class}."
+      end
       self end
 
     # このプラグインを破棄する

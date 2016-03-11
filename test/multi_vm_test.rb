@@ -4,17 +4,14 @@ require 'bundler/setup'
 require 'minitest/autorun'
 
 require 'pluggaloid'
+require_relative 'helper'
 
 describe(Pluggaloid) do
+  include PluggaloidTestHelper
+
   before do
     Delayer.default = Delayer.generate_class(priority: %i<high normal low>, default: :normal)
     Pluggaloid::Plugin.clear!
-  end
-
-  def eval_all_events(delayer=Delayer)
-    native = Thread.list
-    yield if block_given?
-    delayer.run while not(delayer.empty? and (Thread.list - native).empty?)
   end
 
   it "should take new plugin classes" do
