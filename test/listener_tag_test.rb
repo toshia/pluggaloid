@@ -27,6 +27,22 @@ describe(Pluggaloid::ListenerTag) do
       @a, @b, @c, @tag_a = a, b, c, tag_a
     end
 
+    it 'plugin has 3 listeners' do
+      assert_equal 3, @plugin.listeners.count
+    end
+
+    it 'listener a has no tag' do
+      assert_empty @a.tags
+    end
+
+    it 'listener b has tag_a' do
+      assert_equal Set.new([@tag_a]), @b.tags
+    end
+
+    it 'listener c has tag_a' do
+      assert_equal Set.new([@tag_a]), @c.tags
+    end
+
     describe 'detach tag' do
       before do
         @plugin.detach(@tag_a)
@@ -40,5 +56,20 @@ describe(Pluggaloid::ListenerTag) do
         assert_equal [:a], @lst
       end
     end
+
+    describe 'each' do
+      it 'should count of listeners and filters are 2' do
+        assert_equal 2, @tag_a.count
+      end
+
+      it 'should count of listeners are 2' do
+        assert_equal 2, @tag_a.listeners.count
+      end
+
+      it 'should there are no filters' do
+        assert_equal 0, @tag_a.filters.count
+      end
+    end
+
   end
 end

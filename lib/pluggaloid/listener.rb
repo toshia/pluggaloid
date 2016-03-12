@@ -15,12 +15,13 @@ class Pluggaloid::Listener
   # [slug:] イベントリスナスラッグ(Symbol | nil)
   # [tags:] Pluggaloid::ListenerTag|Array リスナのタグ
   # [&callback] コールバック
-  def initialize(event, name: nil, slug: SecureRandom.uuid, tags: nil, &callback)
+  def initialize(event, name: nil, slug: SecureRandom.uuid, tags: [], &callback)
     raise Pluggaloid::TypeError, "Argument `event' must be instance of Pluggaloid::Event, but given #{event.class}." unless event.is_a? Pluggaloid::Event
     @event = event
     @name = name.to_s.freeze
     @slug = slug.to_sym
-    @tags = Set.new(Array(tags)).freeze
+    _tags = tags.is_a?(Pluggaloid::ListenerTag) ? [tags] : Array(tags)
+    @tags = Set.new(_tags).freeze
     @callback = Proc.new
     event.add_listener(self) end
 

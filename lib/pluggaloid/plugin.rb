@@ -120,9 +120,37 @@ module Pluggaloid
       @filters << result
       result end
 
+    # このプラグインのListenerTagを作る
+    # ==== Args
+    # [name] タグ名
+    # ==== Return
+    # Pluggaloid::ListenerTag
     def listener_tag(name=SecureRandom.uuid)
       vm.ListenerTag.new(name: name.to_s, plugin: self)
     end
+
+    # イベントリスナを列挙する
+    # ==== Return
+    # Set of Pluggaloid::Listener
+    def listeners
+      if block_given?
+        @events.each(&Proc.new)
+      else
+        @events.dup
+      end
+    end
+
+    # フィルタを列挙する
+    # ==== Return
+    # Set of Pluggaloid::Filter
+    def filters
+      if block_given?
+        @filters.each(&Proc.new)
+      else
+        @filters.dup
+      end
+    end
+
 
     # イベントを削除する。
     # 引数は、Pluggaloid::ListenerかPluggaloid::Filterのみ(on_*やfilter_*の戻り値)。
@@ -140,8 +168,6 @@ module Pluggaloid
       when vm.Filter
         @filters.delete(listener)
         listener.detach
-      when vm.ListenerTag
-        detach(@events.select{|event| event.tags.include?(listener) })
       when Enumerable
         listener.each(&method(:detach))
       else
