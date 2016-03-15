@@ -1,6 +1,7 @@
 require "pluggaloid/version"
 require "pluggaloid/plugin"
 require 'pluggaloid/event'
+require "pluggaloid/handler"
 require 'pluggaloid/listener'
 require 'pluggaloid/filter'
 require "pluggaloid/listener_tag"

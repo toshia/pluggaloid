@@ -99,24 +99,29 @@ module Pluggaloid
 
     # イベントリスナを新しく登録する
     # ==== Args
-    # [event_name] イベント名
+    # [event] 監視するEventのインスタンス
+    # [name:] 名前(String | nil)
+    # [slug:] イベントリスナスラッグ(Symbol | nil)
     # [tags:] Pluggaloid::ListenerTag|Array リスナのタグ
-    # [&callback] イベントのコールバック
+    # [&callback] コールバック
     # ==== Return
     # Pluggaloid::Listener
-    def add_event(event_name, name: nil, slug: SecureRandom.uuid.to_sym, tags: nil, &callback)
-      result = vm.Listener.new(vm.Event[event_name], name: name, slug: slug, tags: tags, &callback)
+    def add_event(event_name, **kwrest, &callback)
+      result = vm.Listener.new(vm.Event[event_name], **kwrest, &callback)
       @events << result
       result end
 
     # イベントフィルタを新しく登録する
     # ==== Args
-    # [event_name] イベント名
-    # [&callback] イベントのコールバック
+    # [event] 監視するEventのインスタンス
+    # [name:] 名前(String | nil)
+    # [slug:] フィルタスラッグ(Symbol | nil)
+    # [tags:] Pluggaloid::ListenerTag|Array フィルタのタグ
+    # [&callback] コールバック
     # ==== Return
-    # EventFilter
-    def add_event_filter(event_name, &callback)
-      result = vm.Filter.new(vm.Event[event_name], &callback)
+    # Pluggaloid::Filter
+    def add_event_filter(event_name, **kwrest, &callback)
+      result = vm.Filter.new(vm.Event[event_name], **kwrest, &callback)
       @filters << result
       result end
 
@@ -218,7 +223,7 @@ module Pluggaloid
       when /\Aon_?(.+)\Z/
         add_event($1.to_sym, *args, **kwrest, &proc)
       when /\Afilter_?(.+)\Z/
-        add_event_filter($1.to_sym, &proc)
+        add_event_filter($1.to_sym, **kwrest, &proc)
       when /\Ahook_?(.+)\Z/
         add_event_hook($1.to_sym, &proc)
       else

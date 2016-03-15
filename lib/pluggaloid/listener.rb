@@ -2,9 +2,7 @@
 require 'securerandom'
 require 'set'
 
-class Pluggaloid::Listener
-  attr_reader :name, :slug, :tags
-
+class Pluggaloid::Listener < Pluggaloid::Handler
   # プラグインコールバックをこれ以上実行しない。
   def self.cancel!
     throw :plugin_exit, false end
@@ -15,13 +13,8 @@ class Pluggaloid::Listener
   # [slug:] イベントリスナスラッグ(Symbol | nil)
   # [tags:] Pluggaloid::ListenerTag|Array リスナのタグ
   # [&callback] コールバック
-  def initialize(event, name: nil, slug: SecureRandom.uuid, tags: [], &callback)
-    raise Pluggaloid::TypeError, "Argument `event' must be instance of Pluggaloid::Event, but given #{event.class}." unless event.is_a? Pluggaloid::Event
-    @event = event
-    @name = name.to_s.freeze
-    @slug = slug.to_sym
-    _tags = tags.is_a?(Pluggaloid::ListenerTag) ? [tags] : Array(tags)
-    @tags = Set.new(_tags).freeze
+  def initialize(event, **kwrest, &callback)
+    super
     @callback = Proc.new
     event.add_listener(self) end
 
@@ -37,8 +30,4 @@ class Pluggaloid::Listener
   def detach
     @event.delete_listener(self)
     self end
-
-  def inspect
-    "#<#{self.class} event: #{@event.name.inspect}, slug: #{slug.inspect}, name: #{name.inspect}>"
-  end
 end
