@@ -35,15 +35,13 @@ Pluggaloid::Plugin#detach の第一引数に Pluggaloid::ListenerTag の
 される
 
 =end
-class Pluggaloid::ListenerTag
+class Pluggaloid::ListenerTag < Pluggaloid::Identity
   include Enumerable
-
-  attr_reader :name
 
   # ==== Args
   # [name:] タグの名前(String | nil)
-  def initialize(name: SecureRandom.uuid, plugin:)
-    @name = name.to_s.freeze
+  def initialize(plugin:, **kwrest)
+    super(**kwrest)
     @plugin = plugin
   end
 
@@ -84,9 +82,5 @@ class Pluggaloid::ListenerTag
     else
       @plugin.to_enum(:filters).lazy.select{|l| l.tags.include?(self) }
     end
-  end
-
-  def inspect
-    "#<#{self.class} #{@name.inspect}>"
   end
 end

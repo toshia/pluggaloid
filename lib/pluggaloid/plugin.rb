@@ -125,13 +125,32 @@ module Pluggaloid
       @filters << result
       result end
 
-    # このプラグインのListenerTagを作る
+    # このプラグインのListenerTagを作る。
+    # ブロックが渡された場合は、ブロックの中を実行し、ブロックの中で定義された
+    # Handler全てにTagを付与する。
     # ==== Args
+    # [slug] スラッグ
     # [name] タグ名
     # ==== Return
     # Pluggaloid::ListenerTag
-    def listener_tag(name=SecureRandom.uuid)
-      vm.ListenerTag.new(name: name.to_s, plugin: self)
+    def listener_tag(slug=SecureRandom.uuid, name=slug)
+      tag = case slug
+            when String, Symbol
+              vm.ListenerTag.new(slug: slug.to_sym, name: name.to_s, plugin: self)
+            when vm.ListenerTag
+              slug
+            else
+              raise Pluggaloid::TypeError, "Argument `slug' must be instance of Symbol, String or Pluggaloid::ListenerTag, but given #{slug.class}."
+            end
+      if block_given?
+        handlers = @events + @filters
+        yield tag
+        (@events + @filters - handlers).each do |handler|
+          handler.add_tag(tag)
+        end
+      else
+        tag
+      end
     end
 
     # イベントリスナを列挙する

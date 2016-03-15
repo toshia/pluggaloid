@@ -16,19 +16,25 @@ describe(Pluggaloid::ListenerTag) do
 
   describe 'plugin tag' do
     before do
-      a = b = c = d = fd = tag_a = tag_b = tag_c = nil
+      a = b = c = d = fd = tag_a = tag_b = tag_c = tag_d = nil
       lst = @lst = []
       @plugin = @pluggaloid.Plugin.create :parent do
         a = on_a{ lst << :a }
         tag_a = listener_tag :tag_a
         tag_b = listener_tag :tag_b
         tag_c = listener_tag :tag_c
+        tag_d = listener_tag :tag_d
         b = on_b(tags: tag_a){ lst << :b }
         c = on_c(tags: [tag_a, tag_b]){ lst << :c }
-        d = on_d(tags: tag_b){ lst << :d }
-        fd = filter_d(tags: tag_c){|&stop| stop.call }
+        listener_tag tag_d do
+          d = on_d(tags: [tag_b]){ lst << :d }
+          listener_tag tag_c do
+            fd = filter_d{|&stop| stop.call }
+          end
+        end
       end
-      @a, @b, @c, @d, @fd, @tag_a, @tag_b, @tag_c = a, b, c, d, fd, tag_a, tag_b, tag_c
+      @a, @b, @c, @d, @fd = a, b, c, d, fd
+      @tag_a, @tag_b, @tag_c, @tag_d = tag_a, tag_b, tag_c, tag_d
     end
 
     it 'plugin has 4 listeners' do
@@ -47,12 +53,12 @@ describe(Pluggaloid::ListenerTag) do
       assert_equal Set.new([@tag_a, @tag_b]), @c.tags
     end
 
-    it 'listener d has tag_b' do
-      assert_equal Set.new([@tag_b]), @d.tags
+    it 'listener d has tag_b and tag_d' do
+      assert_equal Set.new([@tag_b, @tag_d]), @d.tags
     end
 
-    it 'filter fd has tag_c' do
-      assert_equal Set.new([@tag_c]), @fd.tags
+    it 'filter fd has tag_c and tag_d' do
+      assert_equal Set.new([@tag_c, @tag_d]), @fd.tags
     end
 
     describe 'detach tag_a' do
