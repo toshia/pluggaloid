@@ -105,16 +105,32 @@ describe(Pluggaloid::Plugin) do
     assert_equal(Pluggaloid::Plugin[:defevent], Pluggaloid::Event[:increase].options[:plugin])
   end
 
-  it "unload hook" do
-    value = 0
-    Pluggaloid::Plugin.create(:unload) {
-      on_unload {
-        value += 2 }
-      on_unload {
-        value += 1 } }
-    assert_equal(value, 0)
-    Pluggaloid::Plugin.create(:unload).uninstall
-    assert_equal(value, 3)
+  describe "unload hook" do
+    before do
+      @value = value = []
+      Pluggaloid::Plugin.create(:temporary) {
+        on_unload {
+          value << 2 }
+        on_unload {
+          value << 1 } }
+      Pluggaloid::Plugin.create(:eternal) {
+        on_unload {
+          raise "try to unload eternal plugin" } }
+    end
+
+    it 'should not call unload event it is not unload' do
+      assert_empty(@value)
+    end
+
+    describe 'unload temporary plugin' do
+      before do
+        Pluggaloid::Plugin.create(:temporary).uninstall
+      end
+
+      it 'was called unload hooks' do
+        assert_equal(@value.sort, [1, 2].sort)
+      end
+    end
   end
 
   describe "defdsl" do
