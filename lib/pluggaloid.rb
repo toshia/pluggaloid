@@ -5,13 +5,13 @@ require "pluggaloid/identity"
 require "pluggaloid/handler"
 require 'pluggaloid/listener'
 require 'pluggaloid/filter'
-require "pluggaloid/listener_tag"
+require "pluggaloid/handler_tag"
 require 'pluggaloid/error'
 
 require 'delayer'
 
 module Pluggaloid
-  VM = Struct.new(*%i<Delayer Plugin Event Listener Filter ListenerTag>)
+  VM = Struct.new(*%i<Delayer Plugin Event Listener Filter HandlerTag>)
 
   def self.new(delayer)
     vm = VM.new(delayer,
@@ -19,7 +19,7 @@ module Pluggaloid
                 Class.new(Event),
                 Class.new(Listener),
                 Class.new(Filter),
-                Class.new(ListenerTag))
+                Class.new(HandlerTag))
     vm.Plugin.vm = vm.Event.vm = vm
   end
 end

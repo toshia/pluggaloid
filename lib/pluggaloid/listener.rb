@@ -11,7 +11,7 @@ class Pluggaloid::Listener < Pluggaloid::Handler
   # [event] 監視するEventのインスタンス
   # [name:] 名前(String | nil)
   # [slug:] イベントリスナスラッグ(Symbol | nil)
-  # [tags:] Pluggaloid::ListenerTag|Array リスナのタグ
+  # [tags:] Pluggaloid::HandlerTag|Array リスナのタグ
   # [&callback] コールバック
   def initialize(event, **kwrest, &callback)
     super

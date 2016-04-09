@@ -5,7 +5,7 @@ require 'minitest/autorun'
 require 'pluggaloid'
 require_relative 'helper'
 
-describe(Pluggaloid::ListenerTag) do
+describe(Pluggaloid::HandlerTag) do
   include PluggaloidTestHelper
 
   before do
@@ -20,15 +20,15 @@ describe(Pluggaloid::ListenerTag) do
       lst = @lst = []
       @plugin = @pluggaloid.Plugin.create :parent do
         a = on_a{ lst << :a }
-        tag_a = listener_tag :tag_a
-        tag_b = listener_tag :tag_b
-        tag_c = listener_tag :tag_c
-        tag_d = listener_tag :tag_d
+        tag_a = handler_tag :tag_a
+        tag_b = handler_tag :tag_b
+        tag_c = handler_tag :tag_c
+        tag_d = handler_tag :tag_d
         b = on_b(tags: tag_a){ lst << :b }
         c = on_c(tags: [tag_a, tag_b]){ lst << :c }
-        listener_tag tag_d do
+        handler_tag tag_d do
           d = on_d(tags: [tag_b]){ lst << :d }
-          listener_tag tag_c do
+          handler_tag tag_c do
             fd = filter_d{|&stop| stop.call }
           end
         end

@@ -10,9 +10,9 @@ Pluggaloid::Plugin#add_event などの引数 _tags:_ に、このインスタン
 
 == インスタンスの作成
 
-Pluggaloid::Plugin#listener_tag を使って生成する。 Pluggaloid::ListenerTag の
+Pluggaloid::Plugin#handler_tag を使って生成する。 Pluggaloid::HandlerTag の
 _plugin:_ 引数には、レシーバ(Pluggaloid::Plugin)が渡される。
-Pluggaloid::ListenerTag は、このプラグインの中でだけ使える。複数のプラグインのリスナ
+Pluggaloid::HandlerTag は、このプラグインの中でだけ使える。複数のプラグインのリスナ
 をまとめて管理することはできない。
 
 == リスナにタグをつける
@@ -24,18 +24,18 @@ _tags:_ 引数にこれのインスタンスを渡す。
 
 Enumerable をincludeしていて、リスナやフィルタを取得することができる。
 また、
-- Pluggaloid::ListenerTag#listeners で、 Pluggaloid::Listener だけ
-- Pluggaloid::ListenerTag#filters で、 Pluggaloid::Filter だけ
+- Pluggaloid::HandlerTag#listeners で、 Pluggaloid::Listener だけ
+- Pluggaloid::HandlerTag#filters で、 Pluggaloid::Filter だけ
 を対象にした Enumerator を取得することができる
 
 == このタグがついたリスナを全てdetachする
 
-Pluggaloid::Plugin#detach の第一引数に Pluggaloid::ListenerTag の
-インスタンスを渡すことで、そのListenerTagがついたListener、Filterは全てデタッチ
+Pluggaloid::Plugin#detach の第一引数に Pluggaloid::HandlerTag の
+インスタンスを渡すことで、そのHandlerTagがついたListener、Filterは全てデタッチ
 される
 
 =end
-class Pluggaloid::ListenerTag < Pluggaloid::Identity
+class Pluggaloid::HandlerTag < Pluggaloid::Identity
   include Enumerable
 
   # ==== Args

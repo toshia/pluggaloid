@@ -23,7 +23,7 @@ module Pluggaloid
                     Pluggaloid::Event,
                     Pluggaloid::Listener,
                     Pluggaloid::Filter,
-                    Pluggaloid::ListenerTag)
+                    Pluggaloid::HandlerTag)
                   vm.Event.vm = vm end end
 
       # プラグインのインスタンスを返す。
@@ -103,7 +103,7 @@ module Pluggaloid
     # [event] 監視するEventのインスタンス
     # [name:] 名前(String | nil)
     # [slug:] イベントリスナスラッグ(Symbol | nil)
-    # [tags:] Pluggaloid::ListenerTag|Array リスナのタグ
+    # [tags:] Pluggaloid::HandlerTag|Array リスナのタグ
     # [&callback] コールバック
     # ==== Return
     # Pluggaloid::Listener
@@ -117,7 +117,7 @@ module Pluggaloid
     # [event] 監視するEventのインスタンス
     # [name:] 名前(String | nil)
     # [slug:] フィルタスラッグ(Symbol | nil)
-    # [tags:] Pluggaloid::ListenerTag|Array フィルタのタグ
+    # [tags:] Pluggaloid::HandlerTag|Array フィルタのタグ
     # [&callback] コールバック
     # ==== Return
     # Pluggaloid::Filter
@@ -126,22 +126,22 @@ module Pluggaloid
       @filters << result
       result end
 
-    # このプラグインのListenerTagを作る。
+    # このプラグインのHandlerTagを作る。
     # ブロックが渡された場合は、ブロックの中を実行し、ブロックの中で定義された
     # Handler全てにTagを付与する。
     # ==== Args
     # [slug] スラッグ
     # [name] タグ名
     # ==== Return
-    # Pluggaloid::ListenerTag
-    def listener_tag(slug=SecureRandom.uuid, name=slug)
+    # Pluggaloid::HandlerTag
+    def handler_tag(slug=SecureRandom.uuid, name=slug)
       tag = case slug
             when String, Symbol
-              vm.ListenerTag.new(slug: slug.to_sym, name: name.to_s, plugin: self)
-            when vm.ListenerTag
+              vm.HandlerTag.new(slug: slug.to_sym, name: name.to_s, plugin: self)
+            when vm.HandlerTag
               slug
             else
-              raise Pluggaloid::TypeError, "Argument `slug' must be instance of Symbol, String or Pluggaloid::ListenerTag, but given #{slug.class}."
+              raise Pluggaloid::TypeError, "Argument `slug' must be instance of Symbol, String or Pluggaloid::HandlerTag, but given #{slug.class}."
             end
       if block_given?
         handlers = @events + @filters
@@ -196,7 +196,7 @@ module Pluggaloid
       when Enumerable
         listener.each(&method(:detach))
       else
-        raise ArgumentError, "Argument must be Pluggaloid::Listener, Pluggaloid::Filter, Pluggaloid::ListenerTag or Enumerable. But given #{listener.class}."
+        raise ArgumentError, "Argument must be Pluggaloid::Listener, Pluggaloid::Filter, Pluggaloid::HandlerTag or Enumerable. But given #{listener.class}."
       end
       self end
 

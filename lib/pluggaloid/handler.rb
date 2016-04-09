@@ -12,19 +12,19 @@ class Pluggaloid::Handler < Pluggaloid::Identity
   # [event] 監視するEventのインスタンス
   # [name:] 名前(String | nil)
   # [slug:] ハンドラスラッグ(Symbol | nil)
-  # [tags:] Pluggaloid::ListenerTag|Array リスナのタグ
+  # [tags:] Pluggaloid::HandlerTag|Array リスナのタグ
   # [&callback] コールバック
   def initialize(event, tags: [], **kwrest)
     raise Pluggaloid::TypeError, "Argument `event' must be instance of Pluggaloid::Event, but given #{event.class}." unless event.is_a? Pluggaloid::Event
     super(**kwrest)
     @event = event
-    _tags = tags.is_a?(Pluggaloid::ListenerTag) ? [tags] : Array(tags)
-    _tags.each{|t| raise "#{t} is not a Pluggaloid::ListenerTag" unless t.is_a?(Pluggaloid::ListenerTag) }
+    _tags = tags.is_a?(Pluggaloid::HandlerTag) ? [tags] : Array(tags)
+    _tags.each{|t| raise "#{t} is not a Pluggaloid::HandlerTag" unless t.is_a?(Pluggaloid::HandlerTag) }
     @tags = Set.new(_tags).freeze
   end
 
   def add_tag(tag)
-    raise Pluggaloid::TypeError, "Argument `tag' must be instance of Pluggaloid::ListenerTag, but given #{tag.class}." unless tag.is_a? Pluggaloid::ListenerTag
+    raise Pluggaloid::TypeError, "Argument `tag' must be instance of Pluggaloid::HandlerTag, but given #{tag.class}." unless tag.is_a? Pluggaloid::HandlerTag
     Lock.synchronize do
       @tags = Set.new([tag, *@tags]).freeze
     end
