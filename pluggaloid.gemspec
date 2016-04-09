@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["toshi.alternative@gmail.com"]
   spec.summary       = %q{Extensible plugin system}
   spec.description   = %q{Pluggaloid is extensible plugin system for mikutter.}
-  spec.homepage      = ""
+  spec.homepage      = "https://rubygems.org/gems/pluggaloid"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0")
