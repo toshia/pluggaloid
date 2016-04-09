@@ -124,11 +124,13 @@ describe(Pluggaloid::Plugin) do
 
     describe 'unload temporary plugin' do
       before do
-        Pluggaloid::Plugin.create(:temporary).uninstall
+        eval_all_events do
+          Pluggaloid::Plugin.create(:temporary).uninstall
+        end
       end
 
       it 'was called unload hooks' do
-        assert_equal(@value.sort, [1, 2].sort)
+        assert_equal([1, 2].sort, @value.sort)
       end
     end
   end

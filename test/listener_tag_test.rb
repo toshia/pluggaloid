@@ -134,6 +134,5 @@ describe(Pluggaloid::ListenerTag) do
         assert_equal 1, @tag_c.filters.count
       end
     end
-
   end
 end

@@ -95,7 +95,8 @@ module Pluggaloid
       super
       @defined_time = Time.new.freeze
       @events = Set.new
-      @filters = Set.new end
+      @filters = Set.new
+    end
 
     # イベントリスナを新しく登録する
     # ==== Args
@@ -203,10 +204,12 @@ module Pluggaloid
     # ==== Return
     # self
     def uninstall
-      @events.map(&:detach)
-      @filters.map(&:detach)
-      self.class.destroy name
-      execute_unload_hook
+      vm.Event[:unload].call(self.name)
+      vm.Delayer.new do
+        @events.map(&:detach)
+        @filters.map(&:detach)
+        self.class.destroy name
+      end
       self end
 
     # イベント _event_name_ を宣言する
@@ -230,8 +233,13 @@ module Pluggaloid
 
     # プラグインが Plugin.uninstall される時に呼ばれるブロックを登録する。
     def onunload
-      @unload_hook ||= []
-      @unload_hook.push(Proc.new) end
+      callback = Proc.new
+      add_event(:unload) do |plugin_slug|
+        if plugin_slug == self.name
+          callback.call
+        end
+      end
+    end
     alias :on_unload :onunload
 
     # マジックメソッドを追加する。
@@ -249,9 +257,6 @@ module Pluggaloid
         super end end
 
     private
-
-    def execute_unload_hook
-      @unload_hook.each{ |unload| unload.call } if(defined?(@unload_hook)) end
 
     def vm
       self.class.vm end
