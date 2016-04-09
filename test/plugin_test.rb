@@ -4,17 +4,14 @@ require 'bundler/setup'
 require 'minitest/autorun'
 
 require 'pluggaloid'
+require_relative 'helper'
 
 describe(Pluggaloid::Plugin) do
+  include PluggaloidTestHelper
+
   before do
     Delayer.default = Delayer.generate_class(priority: %i<high normal low>, default: :normal)
     Pluggaloid::Plugin.clear!
-  end
-
-  def eval_all_events
-    native = Thread.list
-    yield if block_given?
-    Delayer.run while not(Delayer.empty? and (Thread.list - native).empty?)
   end
 
   it "fire and filtering event, receive a plugin" do
@@ -108,16 +105,34 @@ describe(Pluggaloid::Plugin) do
     assert_equal(Pluggaloid::Plugin[:defevent], Pluggaloid::Event[:increase].options[:plugin])
   end
 
-  it "unload hook" do
-    value = 0
-    Pluggaloid::Plugin.create(:unload) {
-      on_unload {
-        value += 2 }
-      on_unload {
-        value += 1 } }
-    assert_equal(value, 0)
-    Pluggaloid::Plugin.create(:unload).uninstall
-    assert_equal(value, 3)
+  describe "unload hook" do
+    before do
+      @value = value = []
+      Pluggaloid::Plugin.create(:temporary) {
+        on_unload {
+          value << 2 }
+        on_unload {
+          value << 1 } }
+      Pluggaloid::Plugin.create(:eternal) {
+        on_unload {
+          raise "try to unload eternal plugin" } }
+    end
+
+    it 'should not call unload event it is not unload' do
+      assert_empty(@value)
+    end
+
+    describe 'unload temporary plugin' do
+      before do
+        eval_all_events do
+          Pluggaloid::Plugin.create(:temporary).uninstall
+        end
+      end
+
+      it 'was called unload hooks' do
+        assert_equal([1, 2].sort, @value.sort)
+      end
+    end
   end
 
   describe "defdsl" do

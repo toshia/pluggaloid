@@ -22,7 +22,8 @@ module Pluggaloid
                     self,
                     Pluggaloid::Event,
                     Pluggaloid::Listener,
-                    Pluggaloid::Filter)
+                    Pluggaloid::Filter,
+                    Pluggaloid::HandlerTag)
                   vm.Event.vm = vm end end
 
       # プラグインのインスタンスを返す。
@@ -94,29 +95,87 @@ module Pluggaloid
       super
       @defined_time = Time.new.freeze
       @events = Set.new
-      @filters = Set.new end
+      @filters = Set.new
+    end
 
     # イベントリスナを新しく登録する
     # ==== Args
-    # [event_name] イベント名
-    # [&callback] イベントのコールバック
+    # [event] 監視するEventのインスタンス
+    # [name:] 名前(String | nil)
+    # [slug:] イベントリスナスラッグ(Symbol | nil)
+    # [tags:] Pluggaloid::HandlerTag|Array リスナのタグ
+    # [&callback] コールバック
     # ==== Return
     # Pluggaloid::Listener
-    def add_event(event_name, name: nil, slug: SecureRandom.uuid.to_sym, &callback)
-      result = vm.Listener.new(vm.Event[event_name], name: name, slug: slug, &callback)
+    def add_event(event_name, **kwrest, &callback)
+      result = vm.Listener.new(vm.Event[event_name], **kwrest, &callback)
       @events << result
       result end
 
     # イベントフィルタを新しく登録する
     # ==== Args
-    # [event_name] イベント名
-    # [&callback] イベントのコールバック
+    # [event] 監視するEventのインスタンス
+    # [name:] 名前(String | nil)
+    # [slug:] フィルタスラッグ(Symbol | nil)
+    # [tags:] Pluggaloid::HandlerTag|Array フィルタのタグ
+    # [&callback] コールバック
     # ==== Return
-    # EventFilter
-    def add_event_filter(event_name, &callback)
-      result = vm.Filter.new(vm.Event[event_name], &callback)
+    # Pluggaloid::Filter
+    def add_event_filter(event_name, **kwrest, &callback)
+      result = vm.Filter.new(vm.Event[event_name], **kwrest, &callback)
       @filters << result
       result end
+
+    # このプラグインのHandlerTagを作る。
+    # ブロックが渡された場合は、ブロックの中を実行し、ブロックの中で定義された
+    # Handler全てにTagを付与する。
+    # ==== Args
+    # [slug] スラッグ
+    # [name] タグ名
+    # ==== Return
+    # Pluggaloid::HandlerTag
+    def handler_tag(slug=SecureRandom.uuid, name=slug)
+      tag = case slug
+            when String, Symbol
+              vm.HandlerTag.new(slug: slug.to_sym, name: name.to_s, plugin: self)
+            when vm.HandlerTag
+              slug
+            else
+              raise Pluggaloid::TypeError, "Argument `slug' must be instance of Symbol, String or Pluggaloid::HandlerTag, but given #{slug.class}."
+            end
+      if block_given?
+        handlers = @events + @filters
+        yield tag
+        (@events + @filters - handlers).each do |handler|
+          handler.add_tag(tag)
+        end
+      else
+        tag
+      end
+    end
+
+    # イベントリスナを列挙する
+    # ==== Return
+    # Set of Pluggaloid::Listener
+    def listeners
+      if block_given?
+        @events.each(&Proc.new)
+      else
+        @events.dup
+      end
+    end
+
+    # フィルタを列挙する
+    # ==== Return
+    # Set of Pluggaloid::Filter
+    def filters
+      if block_given?
+        @filters.each(&Proc.new)
+      else
+        @filters.dup
+      end
+    end
+
 
     # イベントを削除する。
     # 引数は、Pluggaloid::ListenerかPluggaloid::Filterのみ(on_*やfilter_*の戻り値)。
@@ -127,22 +186,30 @@ module Pluggaloid
     # self
     def detach(*args)
       listener = args.last
-      if listener.is_a? vm.Listener
+      case listener
+      when vm.Listener
         @events.delete(listener)
         listener.detach
-      elsif listener.is_a? vm.Filter
+      when vm.Filter
         @filters.delete(listener)
-        listener.detach end
+        listener.detach
+      when Enumerable
+        listener.each(&method(:detach))
+      else
+        raise ArgumentError, "Argument must be Pluggaloid::Listener, Pluggaloid::Filter, Pluggaloid::HandlerTag or Enumerable. But given #{listener.class}."
+      end
       self end
 
     # このプラグインを破棄する
     # ==== Return
     # self
     def uninstall
-      @events.map(&:detach)
-      @filters.map(&:detach)
-      self.class.destroy name
-      execute_unload_hook
+      vm.Event[:unload].call(self.name)
+      vm.Delayer.new do
+        @events.map(&:detach)
+        @filters.map(&:detach)
+        self.class.destroy name
+      end
       self end
 
     # イベント _event_name_ を宣言する
@@ -166,8 +233,13 @@ module Pluggaloid
 
     # プラグインが Plugin.uninstall される時に呼ばれるブロックを登録する。
     def onunload
-      @unload_hook ||= []
-      @unload_hook.push(Proc.new) end
+      callback = Proc.new
+      add_event(:unload) do |plugin_slug|
+        if plugin_slug == self.name
+          callback.call
+        end
+      end
+    end
     alias :on_unload :onunload
 
     # マジックメソッドを追加する。
@@ -178,16 +250,13 @@ module Pluggaloid
       when /\Aon_?(.+)\Z/
         add_event($1.to_sym, *args, **kwrest, &proc)
       when /\Afilter_?(.+)\Z/
-        add_event_filter($1.to_sym, &proc)
+        add_event_filter($1.to_sym, **kwrest, &proc)
       when /\Ahook_?(.+)\Z/
         add_event_hook($1.to_sym, &proc)
       else
         super end end
 
     private
-
-    def execute_unload_hook
-      @unload_hook.each{ |unload| unload.call } if(defined?(@unload_hook)) end
 
     def vm
       self.class.vm end
