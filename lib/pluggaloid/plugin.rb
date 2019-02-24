@@ -246,15 +246,16 @@ module Pluggaloid
     # on_?name :: add_event(name)
     # filter_?name :: add_event_filter(name)
     def method_missing(method, *args, **kwrest, &proc)
-      case method.to_s
-      when /\Aon_?(.+)\Z/
-        add_event($1.to_sym, *args, **kwrest, &proc)
-      when /\Afilter_?(.+)\Z/
-        add_event_filter($1.to_sym, **kwrest, &proc)
-      when /\Ahook_?(.+)\Z/
-        add_event_hook($1.to_sym, &proc)
-      else
-        super end end
+      method_name = method.to_s
+      case
+      when method_name.start_with?('on')
+        event_name = method_name[(method_name[2] == '_' ? 3 : 2)..method_name.size]
+        add_event(event_name.to_sym, *args, **kwrest, &proc)
+      when method_name.start_with?('filter')
+        event_name = method_name[(method_name[6] == '_' ? 7 : 6)..method_name.size]
+        add_event_filter(event_name.to_sym, **kwrest, &proc)
+      end
+    end
 
     private
 
