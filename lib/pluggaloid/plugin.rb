@@ -134,7 +134,7 @@ module Pluggaloid
     # [name] タグ名
     # ==== Return
     # Pluggaloid::HandlerTag
-    def handler_tag(slug=SecureRandom.uuid, name=slug)
+    def handler_tag(slug=SecureRandom.uuid, name=slug, &block)
       tag = case slug
             when String, Symbol
               vm.HandlerTag.new(slug: slug.to_sym, name: name.to_s, plugin: self)
@@ -143,9 +143,9 @@ module Pluggaloid
             else
               raise Pluggaloid::TypeError, "Argument `slug' must be instance of Symbol, String or Pluggaloid::HandlerTag, but given #{slug.class}."
             end
-      if block_given?
+      if block
         handlers = @events + @filters
-        yield tag
+        block.(tag)
         (@events + @filters - handlers).each do |handler|
           handler.add_tag(tag)
         end
@@ -158,7 +158,7 @@ module Pluggaloid
     # ==== Return
     # Set of Pluggaloid::Listener
     def listeners(&block)
-      if block_given?
+      if block
         @events.each(&block)
       else
         @events.dup
@@ -169,7 +169,7 @@ module Pluggaloid
     # ==== Return
     # Set of Pluggaloid::Filter
     def filters(&block)
-      if block_given?
+      if block
         @filters.each(&block)
       else
         @filters.dup

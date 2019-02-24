@@ -49,7 +49,7 @@ class Pluggaloid::HandlerTag < Pluggaloid::Identity
   # ==== Return
   # Enumerable
   def each(&block)
-    if block_given?
+    if block
       Enumerator.new do |y|
         listeners{|x| y << x }
         filters{|x| y << x }
@@ -66,7 +66,7 @@ class Pluggaloid::HandlerTag < Pluggaloid::Identity
   # ==== Return
   # Enumerable
   def listeners(&block)
-    if block_given?
+    if block
       listeners.each(&block)
     else
       @plugin.to_enum(:listeners).lazy.select{|l| l.tags.include?(self) }
@@ -77,7 +77,7 @@ class Pluggaloid::HandlerTag < Pluggaloid::Identity
   # ==== Return
   # Enumerable
   def filters(&block)
-    if block_given?
+    if block
       filters.each(&block)
     else
       @plugin.to_enum(:filters).lazy.select{|l| l.tags.include?(self) }
