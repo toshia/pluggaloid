@@ -157,9 +157,9 @@ module Pluggaloid
     # イベントリスナを列挙する
     # ==== Return
     # Set of Pluggaloid::Listener
-    def listeners
+    def listeners(&block)
       if block_given?
-        @events.each(&Proc.new)
+        @events.each(&block)
       else
         @events.dup
       end
@@ -168,9 +168,9 @@ module Pluggaloid
     # フィルタを列挙する
     # ==== Return
     # Set of Pluggaloid::Filter
-    def filters
+    def filters(&block)
       if block_given?
-        @filters.each(&Proc.new)
+        @filters.each(&block)
       else
         @filters.dup
       end
@@ -232,8 +232,7 @@ module Pluggaloid
       self end
 
     # プラグインが Plugin.uninstall される時に呼ばれるブロックを登録する。
-    def onunload
-      callback = Proc.new
+    def onunload(&callback)
       add_event(:unload) do |plugin_slug|
         if plugin_slug == self.name
           callback.call

@@ -15,7 +15,7 @@ class Pluggaloid::Listener < Pluggaloid::Handler
   # [&callback] コールバック
   def initialize(event, **kwrest, &callback)
     super
-    @callback = Proc.new
+    @callback = callback
     event.add_listener(self) end
 
   # イベントを実行する

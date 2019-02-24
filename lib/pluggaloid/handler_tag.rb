@@ -48,12 +48,12 @@ class Pluggaloid::HandlerTag < Pluggaloid::Identity
   # このTagがついている Pluggaloid::Listener と Pluggaloid::Filter を全て列挙する
   # ==== Return
   # Enumerable
-  def each
+  def each(&block)
     if block_given?
       Enumerator.new do |y|
         listeners{|x| y << x }
         filters{|x| y << x }
-      end.each(&Proc.new)
+      end.each(&block)
     else
       Enumerator.new do |y|
         listeners{|x| y << x }
@@ -65,9 +65,9 @@ class Pluggaloid::HandlerTag < Pluggaloid::Identity
   # このTagがついている Pluggaloid::Listener を全て列挙する
   # ==== Return
   # Enumerable
-  def listeners
+  def listeners(&block)
     if block_given?
-      listeners.each(&Proc.new)
+      listeners.each(&block)
     else
       @plugin.to_enum(:listeners).lazy.select{|l| l.tags.include?(self) }
     end
@@ -76,9 +76,9 @@ class Pluggaloid::HandlerTag < Pluggaloid::Identity
   # このTagがついている Pluggaloid::Filter を全て列挙する
   # ==== Return
   # Enumerable
-  def filters
+  def filters(&block)
     if block_given?
-      filters.each(&Proc.new)
+      filters.each(&block)
     else
       @plugin.to_enum(:filters).lazy.select{|l| l.tags.include?(self) }
     end
