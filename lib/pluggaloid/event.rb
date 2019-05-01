@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 class Pluggaloid::Event
+  Lock = Mutex.new
+
   include InstanceStorage
 
   # オプション。以下のキーを持つHash
@@ -14,8 +16,9 @@ class Pluggaloid::Event
   def initialize(*args)
     super
     @options = {}
-    @listeners = []
-    @filters = [] end
+    @listeners = [].freeze
+    @filters = [].freeze
+  end
 
   def vm
     self.class.vm end
@@ -60,15 +63,25 @@ class Pluggaloid::Event
 
   def add_listener(listener)
     unless listener.is_a? Pluggaloid::Listener
-      raise Pluggaloid::ArgumentError, "First argument must be Pluggaloid::Listener, but given #{listener.class}." end
-    if @listeners.map(&:slug).include?(listener.slug)
-      raise Pluggaloid::DuplicateListenerSlugError, "Listener slug #{listener.slug} already exists." end
-    @listeners << listener
-    self end
+      raise Pluggaloid::ArgumentError, "First argument must be Pluggaloid::Listener, but given #{listener.class}."
+    end
+    Lock.synchronize do
+      if @listeners.map(&:slug).include?(listener.slug)
+        raise Pluggaloid::DuplicateListenerSlugError, "Listener slug #{listener.slug} already exists."
+      end
+      @listeners = [*@listeners, listener].freeze
+    end
+    self
+  end
 
-  def delete_listener(event_filter)
-    @listeners.delete(event_filter)
-    self end
+  def delete_listener(listener)
+    Lock.synchronize do
+      @listeners = @listeners.dup
+      @listeners.delete(listener)
+      @listeners.freeze
+    end
+    self
+  end
 
   # イベントフィルタを追加する
   # ==== Args
@@ -78,8 +91,9 @@ class Pluggaloid::Event
   def add_filter(event_filter)
     unless event_filter.is_a? Pluggaloid::Filter
       raise Pluggaloid::ArgumentError, "First argument must be Pluggaloid::Filter, but given #{event_filter.class}." end
-    @filters << event_filter
-    self end
+    @filters = [*@filters, event_filter].freeze
+    self
+  end
 
   # イベントフィルタを削除する
   # ==== Args
@@ -87,14 +101,22 @@ class Pluggaloid::Event
   # ==== Return
   # self
   def delete_filter(event_filter)
-    @filters.delete(event_filter)
-    self end
+    Lock.synchronize do
+      @filters = @filters.dup
+      @filters.delete(event_filter)
+      @filters.freeze
+    end
+    self
+  end
 
   private
   def call_all_listeners(args)
     catch(:plugin_exit) do
       @listeners.each do |listener|
-        listener.call(*args) end end end
+        listener.call(*args)
+      end
+    end
+  end
 
   class << self
     attr_accessor :filter_another_thread, :vm
