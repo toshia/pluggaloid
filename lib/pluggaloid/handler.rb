@@ -40,6 +40,6 @@ class Pluggaloid::Handler < Pluggaloid::Identity
   end
 
   def inspect
-    "#<#{self.class} event: #{@event.name.inspect}, slug: #{slug.inspect}, name: #{name.inspect}>"
+    "#<#{self.class} #{name.inspect}(#{slug}) for #{@event.name} event>"
   end
 end

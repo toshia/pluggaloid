@@ -16,6 +16,10 @@ class Pluggaloid::Identity
   end
 
   def inspect
-    "#<#{self.class} slug: #{slug.inspect}, name: #{name.inspect}>"
+    if name == slug.to_s
+      "#<#{self.class} #{name.inspect}>"
+    else
+      "#<#{self.class} #{name.inspect}(#{slug.inspect})>"
+    end
   end
 end
