@@ -202,4 +202,12 @@ describe(Pluggaloid::Plugin) do
     end
   end
 
+  it 'call undefined method in plugin context' do
+    assert_raises(NameError) do
+      Pluggaloid::Plugin.create(:raises) do
+        undefined_call
+      end
+    end
+  end
+
 end

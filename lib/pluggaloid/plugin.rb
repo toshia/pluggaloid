@@ -253,6 +253,8 @@ module Pluggaloid
       when method_name.start_with?('filter')
         event_name = method_name[(method_name[6] == '_' ? 7 : 6)..method_name.size]
         add_event_filter(event_name.to_sym, **kwrest, &proc)
+      else
+        super
       end
     end
 
