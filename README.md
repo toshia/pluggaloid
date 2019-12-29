@@ -54,6 +54,25 @@ Pluggaloid::newは、プラグイン機構を制御するためのDelayer, Plugi
 
 コンストラクタの唯一の引数には `Delayer.generate_class(priority: %i<high normal low>, default: :normal)`のように、優先順位付きでデフォルト優先度が設定されたDelayerを渡します。
 
+## Reactive Filter
+
+### each_slice(times)
+
+_times_ 要素ずつブロックに渡して繰り返します。
+要素数が _times_ で割り切れないときは、要素が _times_ 個になるまで待ちます。
+
+### throttle(sec)
+
+最後に要素を受信してから、 _sec_ 秒の間に受信した要素を捨てます。
+
+### debounce(sec)
+
+_sec_ 秒要素を受信しなかった場合、最後の要素を送信する。
+
+### buffer(sec)
+
+_sec_ 秒の間に受信した要素を、 _sec_ 秒ごとに配列にまとめて送信する。
+
 ## Contributing
 
 1. Fork it ( https://github.com/toshia/pluggaloid/fork )
