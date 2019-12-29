@@ -13,6 +13,9 @@ require 'delayer'
 module Pluggaloid
   VM = Struct.new(*%i<Delayer Plugin Event Listener Filter HandlerTag>)
 
+  class Yield; end
+  YIELD = Yield.new.freeze
+
   def self.new(delayer)
     vm = VM.new(delayer,
                 Class.new(Plugin),

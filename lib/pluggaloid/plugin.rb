@@ -126,6 +126,33 @@ module Pluggaloid
       @filters << result
       result end
 
+    def subscribe(event_name, *specs, &block)
+      yield_index = Pluggaloid::Event[event_name]
+                      .options[:prototype]
+                      .index(Pluggaloid::YIELD)
+      _subscribe(
+        event_name,
+        yield_index,
+        argument_hash(specs, yield_index),
+        &block
+      )
+    end
+
+    private def _subscribe(event_name, yield_index, hash, &block)
+      add_event(event_name) do |*args|
+        stream = args.delete_at(yield_index)
+        if argument_hash(args, yield_index) == hash
+          block.call(stream)
+        end
+      end
+    end
+
+    private def argument_hash(stream, yield_index)
+      stream.each_with_index.inject(0) do |result, (item, i)|
+        i == yield_index ? result : result ^ item.hash
+      end
+    end
+
     # このプラグインのHandlerTagを作る。
     # ブロックが渡された場合は、ブロックの中を実行し、ブロックの中で定義された
     # Handler全てにTagを付与する。
