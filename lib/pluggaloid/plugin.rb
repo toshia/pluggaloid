@@ -148,11 +148,8 @@ module Pluggaloid
         end
       else
         Enumerator.new do |yielder|
-          add_event(event_name) do |*args|
-            stream = args.delete_at(yield_index)
-            if argument_hash(args, yield_index) == hash
-              stream.each(&yielder.method(:<<))
-            end
+          _subscribe(event_name, yield_index, hash) do |stream|
+            stream.each(&yielder.method(:<<))
           end
         end.lazy
       end
