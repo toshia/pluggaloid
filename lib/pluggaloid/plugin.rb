@@ -139,17 +139,28 @@ module Pluggaloid
     end
 
     private def _subscribe(event_name, yield_index, hash, &block)
-      add_event(event_name) do |*args|
-        stream = args.delete_at(yield_index)
-        if argument_hash(args, yield_index) == hash
-          block.call(stream)
+      if block
+        add_event(event_name) do |*args|
+          stream = args.delete_at(yield_index)
+          if argument_hash(args, yield_index) == hash
+            block.call(stream)
+          end
         end
+      else
+        Enumerator.new do |yielder|
+          add_event(event_name) do |*args|
+            stream = args.delete_at(yield_index)
+            if argument_hash(args, yield_index) == hash
+              stream.each(&yielder.method(:<<))
+            end
+          end
+        end.lazy
       end
     end
 
     private def argument_hash(stream, yield_index)
       stream.each_with_index.inject(0) do |result, (item, i)|
-        i == yield_index ? result : result ^ item.hash
+        i == yield_index ? result : [*result, item.hash]
       end
     end
 
