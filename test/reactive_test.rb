@@ -68,4 +68,30 @@ describe(Pluggaloid::Plugin) do
 
     assert_equal(%w[one three], sum)
   end
+
+  it "subscribe buffer" do
+    sum = []
+
+    Pluggaloid::Plugin.create(:event) do
+      defevent :increase, prototype: [Integer, Pluggaloid::YIELD]
+      subscribe(:increase, 1).each_slice(3).each do |v|
+        sum << v
+      end
+    end
+
+    eval_all_events do
+      Pluggaloid::Event[:increase].call(1, 100.times)
+    end
+
+    assert_equal([0, 1, 2], sum.first)
+    assert_equal([96, 97, 98], sum.last)
+    assert_equal(33, sum.size)
+
+    eval_all_events do
+      Pluggaloid::Event[:increase].call(1, [100, 101])
+    end
+
+    assert_equal([99, 100, 101], sum.last)
+    assert_equal(34, sum.size)
+  end
 end
