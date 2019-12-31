@@ -69,7 +69,7 @@ describe(Pluggaloid::Plugin) do
     assert_equal(%w[one three], sum)
   end
 
-  it "subscribe buffer" do
+  it "subscribe each_slice" do
     sum = []
 
     Pluggaloid::Plugin.create(:event) do
