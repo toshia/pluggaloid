@@ -130,29 +130,31 @@ module Pluggaloid
       yield_index = Pluggaloid::Event[event_name]
                       .options[:prototype]
                       .index(Pluggaloid::YIELD)
-      _subscribe(
-        event_name,
-        yield_index,
-        argument_hash(specs, yield_index),
-        &block
-      )
+      hash = argument_hash(specs, yield_index)
+      if block
+        subscribe_each(event_name, yield_index, hash, &block)
+      else
+        subscribe_enumerator(event_name, yield_index, hash)
+      end
     end
 
-    private def _subscribe(event_name, yield_index, hash, &block)
-      if block
-        add_event(event_name) do |*args|
-          stream = args.delete_at(yield_index)
-          if argument_hash(args, yield_index) == hash
-            block.call(stream)
-          end
+    private def subscribe_each(event_name, yield_index, hash, &block)
+      add_event(event_name) do |*args|
+        stream = args.delete_at(yield_index)
+        if argument_hash(args, yield_index) == hash
+          block.call(stream)
         end
-      else
+      end
+    end
+
+    private def subscribe_enumerator(event_name, yield_index, hash)
+      Pluggaloid::Subscriber.new(
         Enumerator.new do |yielder|
-          _subscribe(event_name, yield_index, hash) do |stream|
+          subscribe_each(event_name, yield_index, hash) do |stream|
             stream.each(&yielder.method(:<<))
           end
         end.lazy
-      end
+      )
     end
 
     private def argument_hash(stream, yield_index)

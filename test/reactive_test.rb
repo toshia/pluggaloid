@@ -94,4 +94,32 @@ describe(Pluggaloid::Plugin) do
     assert_equal([99, 100, 101], sum.last)
     assert_equal(34, sum.size)
   end
+
+  it "throttle" do
+    sum = []
+
+    Pluggaloid::Plugin.create(:event) do
+      defevent :increase, prototype: [Integer, Pluggaloid::YIELD]
+      subscribe(:increase, 1).throttle(0.001).each do |v|
+        sum << v
+      end
+    end
+
+    eval_all_events do
+      Pluggaloid::Event[:increase].call(1, (1..10).to_a)
+      Pluggaloid::Event[:increase].call(1, (11..20).to_a)
+    end
+
+    assert_equal(1, sum.last)
+    assert_equal(1, sum.size)
+
+    sleep 0.01
+
+    eval_all_events do
+      Pluggaloid::Event[:increase].call(1, (21..30).to_a)
+    end
+
+    assert_equal(21, sum.last)
+    assert_equal(2, sum.size)
+  end
 end
