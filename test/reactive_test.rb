@@ -122,4 +122,28 @@ describe(Pluggaloid::Plugin) do
     assert_equal(21, sum.last)
     assert_equal(2, sum.size)
   end
+
+  it "debounce" do
+    sum = []
+
+    Pluggaloid::Plugin.create(:event) do
+      defevent :increase, prototype: [Integer, Pluggaloid::YIELD]
+      subscribe(:increase, 1).debounce(0.01).each do |v|
+        sum << v
+      end
+    end
+
+    eval_all_events do
+      Pluggaloid::Event[:increase].call(1, (1..10).to_a)
+      Pluggaloid::Event[:increase].call(1, (11..20).to_a)
+    end
+
+    assert_equal(0, sum.size)
+
+    sleep 0.02
+    Delayer.run
+
+    assert_equal(1, sum.size)
+    assert_equal(20, sum.last)
+  end
 end

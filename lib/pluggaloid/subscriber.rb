@@ -18,6 +18,18 @@ module Pluggaloid
       end
     end
 
+    def debounce(sec)
+      throttling_promise = nil
+      Enumerator.new do |yielder|
+        @enumerator.each do |item|
+          throttling_promise&.cancel
+          throttling_promise = Delayer.new(delay: sec) do
+            yielder << item
+          end
+        end
+      end.lazy
+    end
+
     (Enumerator.instance_methods - Enumerator.superclass.instance_methods).each do |method_name|
       define_method(method_name) do |*rest, **kwrest, &block|
         if kwrest.empty?
