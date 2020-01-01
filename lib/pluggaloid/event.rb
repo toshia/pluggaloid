@@ -18,6 +18,7 @@ class Pluggaloid::Event
     @options = {}
     @listeners = [].freeze
     @filters = [].freeze
+    @subscribers = {}
   end
 
   def vm
@@ -62,14 +63,21 @@ class Pluggaloid::Event
         event_filter.filtering(*acm) } } end
 
   def add_listener(listener)
-    unless listener.is_a? Pluggaloid::Listener
-      raise Pluggaloid::ArgumentError, "First argument must be Pluggaloid::Listener, but given #{listener.class}."
-    end
-    Lock.synchronize do
-      if @listeners.map(&:slug).include?(listener.slug)
-        raise Pluggaloid::DuplicateListenerSlugError, "Listener slug #{listener.slug} already exists."
+    case listener
+    when Pluggaloid::Listener
+      Lock.synchronize do
+        if @listeners.map(&:slug).include?(listener.slug)
+          raise Pluggaloid::DuplicateListenerSlugError, "Listener slug #{listener.slug} already exists."
+        end
+        @listeners = [*@listeners, listener].freeze
       end
-      @listeners = [*@listeners, listener].freeze
+    when Pluggaloid::Subscriber
+      Lock.synchronize do
+        @subscribers[listener.accepted_hash] ||= []
+        @subscribers[listener.accepted_hash] << listener
+      end
+    else
+      raise Pluggaloid::ArgumentError, "First argument must be Pluggaloid::Listener or Pluggaloid::Subscriber, but given #{listener.class}."
     end
     self
   end
@@ -109,8 +117,23 @@ class Pluggaloid::Event
     self
   end
 
+  def argument_hash(args)
+    args.each_with_index.map do |item, i|
+      if i != yield_index
+        item.hash
+      end
+    end.compact.freeze
+  end
+
+  def yield_index
+    @yield_index ||= self.options[:prototype].index(Pluggaloid::YIELD)
+  end
+
   private
   def call_all_listeners(args)
+    @subscribers[argument_hash(args)]&.each do |subscriber|
+      subscriber.call(*args)
+    end
     catch(:plugin_exit) do
       @listeners.each do |listener|
         listener.call(*args)

@@ -18,12 +18,14 @@ module Pluggaloid
         @vm ||= begin
                   raise Pluggaloid::NoDefaultDelayerError, "Default Delayer was not set." unless Delayer.default
                   vm = Pluggaloid::VM.new(
-                    Delayer.default,
-                    self,
-                    Pluggaloid::Event,
-                    Pluggaloid::Listener,
-                    Pluggaloid::Filter,
-                    Pluggaloid::HandlerTag)
+                    Delayer: Delayer.default,
+                    Plugin: self,
+                    Event: Pluggaloid::Event,
+                    Listener: Pluggaloid::Listener,
+                    Filter: Pluggaloid::Filter,
+                    HandlerTag: Pluggaloid::HandlerTag,
+                    Subscriber: Pluggaloid::Subscriber
+                  )
                   vm.Event.vm = vm end end
 
       # プラグインのインスタンスを返す。
@@ -126,41 +128,10 @@ module Pluggaloid
       @filters << result
       result end
 
-    def subscribe(event_name, *specs, &block)
-      yield_index = Pluggaloid::Event[event_name]
-                      .options[:prototype]
-                      .index(Pluggaloid::YIELD)
-      hash = argument_hash(specs, yield_index)
-      if block
-        subscribe_each(event_name, yield_index, hash, &block)
-      else
-        subscribe_enumerator(event_name, yield_index, hash)
-      end
-    end
-
-    private def subscribe_each(event_name, yield_index, hash, &block)
-      add_event(event_name) do |*args|
-        stream = args.delete_at(yield_index)
-        if argument_hash(args, yield_index) == hash
-          block.call(stream)
-        end
-      end
-    end
-
-    private def subscribe_enumerator(event_name, yield_index, hash)
-      Pluggaloid::Stream.new(
-        Enumerator.new do |yielder|
-          subscribe_each(event_name, yield_index, hash) do |stream|
-            stream.each(&yielder.method(:<<))
-          end
-        end.lazy
-      )
-    end
-
-    private def argument_hash(stream, yield_index)
-      stream.each_with_index.inject(0) do |result, (item, i)|
-        i == yield_index ? result : [*result, item.hash]
-      end
+    def subscribe(event_name, *specs, **kwrest, &block)
+      result = vm.Subscriber.new(vm.Event[event_name], *specs, **kwrest, &block)
+      @events << result
+      result
     end
 
     # このプラグインのHandlerTagを作る。
