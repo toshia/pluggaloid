@@ -129,9 +129,19 @@ module Pluggaloid
       result end
 
     def subscribe(event_name, *specs, **kwrest, &block)
-      result = vm.Subscriber.new(vm.Event[event_name], *specs, **kwrest, &block)
-      @events << result
-      result
+      if block
+        result = vm.Subscriber.new(vm.Event[event_name], *specs, **kwrest, &block)
+        @events << result
+        result
+      else
+        Stream.new(
+          Enumerator.new do |yielder|
+            @events << vm.Subscriber.new(vm.Event[event_name], *specs, **kwrest) do |stream|
+              stream.each(&yielder.method(:<<))
+            end
+          end.lazy
+        )
+      end
     end
 
     # このプラグインのHandlerTagを作る。

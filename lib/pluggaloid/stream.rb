@@ -20,29 +20,33 @@ module Pluggaloid
 
     def debounce(sec)
       throttling_promise = nil
-      Enumerator.new do |yielder|
-        @enumerator.each do |item|
-          throttling_promise&.cancel
-          throttling_promise = Delayer.new(delay: sec) do
-            yielder << item
+      Stream.new(
+        Enumerator.new do |yielder|
+          @enumerator.each do |item|
+            throttling_promise&.cancel
+            throttling_promise = Delayer.new(delay: sec) do
+              yielder << item
+            end
           end
-        end
-      end.lazy
+        end.lazy
+      )
     end
 
     def buffer(sec)
       throttling_promise = nil
       buffer = []
-      Enumerator.new do |yielder|
-        @enumerator.each do |item|
-          buffer << item
-          throttling_promise ||= Delayer.new(delay: sec) do
-            yielder << buffer.freeze
-            buffer = []
-            throttling_promise = nil
+      Stream.new(
+        Enumerator.new do |yielder|
+          @enumerator.each do |item|
+            buffer << item
+            throttling_promise ||= Delayer.new(delay: sec) do
+              yielder << buffer.freeze
+              buffer = []
+              throttling_promise = nil
+            end
           end
-        end
-      end.lazy
+        end.lazy
+      )
     end
 
     (Enumerator.instance_methods - Enumerator.superclass.instance_methods).each do |method_name|
