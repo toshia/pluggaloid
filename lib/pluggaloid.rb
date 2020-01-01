@@ -1,6 +1,6 @@
 require "pluggaloid/version"
 require "pluggaloid/plugin"
-require 'pluggaloid/subscriber'
+require 'pluggaloid/stream'
 require 'pluggaloid/event'
 require "pluggaloid/identity"
 require "pluggaloid/handler"

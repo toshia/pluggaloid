@@ -148,7 +148,7 @@ module Pluggaloid
     end
 
     private def subscribe_enumerator(event_name, yield_index, hash)
-      Pluggaloid::Subscriber.new(
+      Pluggaloid::Stream.new(
         Enumerator.new do |yielder|
           subscribe_each(event_name, yield_index, hash) do |stream|
             stream.each(&yielder.method(:<<))

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Pluggaloid
-  class Subscriber
+  class Stream
     include Enumerable
 
     def initialize(enumerator)
@@ -53,7 +53,7 @@ module Pluggaloid
           r = @enumerator.__send__(method_name, *rest, **kwrest, &block)
         end
         if r.is_a?(Enumerator::Lazy)
-          Subscriber.new(r)
+          Stream.new(r)
         else
           r
         end
