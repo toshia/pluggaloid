@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = '>= 2.4.0'
 
-  spec.add_dependency 'delayer', '>= 1.0.0', '< 2.0'
+  spec.add_dependency 'delayer', '>= 1.1.0', '< 2.0'
   spec.add_dependency 'instance_storage', ">= 1.0.0", "< 2.0.0"
 
   spec.add_development_dependency "bundler"
