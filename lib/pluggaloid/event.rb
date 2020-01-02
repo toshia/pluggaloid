@@ -91,6 +91,17 @@ class Pluggaloid::Event
     self
   end
 
+  def delete_subscriber(listener)
+    Lock.synchronize do
+      ss = @subscribers[listener.accepted_hash]
+      ss.delete(listener)
+      if ss.empty?
+        @subscribers.delete(listener.accepted_hash)
+      end
+    end
+    self
+  end
+
   # イベントフィルタを追加する
   # ==== Args
   # [event_filter] イベントフィルタ(Filter)

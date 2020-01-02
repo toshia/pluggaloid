@@ -205,7 +205,7 @@ module Pluggaloid
     def detach(*args)
       listener = args.last
       case listener
-      when vm.Listener
+      when vm.Listener, vm.Subscriber
         @events.delete(listener)
         listener.detach
       when vm.Filter

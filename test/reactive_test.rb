@@ -50,6 +50,27 @@ describe(Pluggaloid::Plugin) do
     assert_equal(:one, sum)
   end
 
+  it "detach" do
+    sum = 0
+    subscriber = nil
+    Pluggaloid::Plugin.create(:event) do
+      defevent :increase, prototype: [Pluggaloid::YIELD]
+      subscriber = subscribe(:increase) do |v|
+        sum += v
+      end
+    end
+    eval_all_events do
+      Pluggaloid::Event[:increase].call(1)
+    end
+    assert_equal(1, sum, "It should execute subscriber when event called")
+
+    eval_all_events do
+      Pluggaloid::Plugin[:event].detach subscriber
+      Pluggaloid::Event[:increase].call(1)
+    end
+    assert_equal(1, sum, "It should not execute detached subscriber when event called")
+  end
+
   it "subscribe enumerable chain" do
     sum = []
 

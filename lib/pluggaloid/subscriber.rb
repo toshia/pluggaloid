@@ -29,7 +29,7 @@ class Pluggaloid::Subscriber < Pluggaloid::Handler
   # ==== Return
   # self
   def detach
-    @event.delete_listener(self)
+    @event.delete_subscriber(self)
     self
   end
 end
