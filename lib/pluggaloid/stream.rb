@@ -49,6 +49,10 @@ module Pluggaloid
       )
     end
 
+    def merge(*streams)
+      Stream.new(Merge.new(self, *streams).lazy)
+    end
+
     (Enumerator.instance_methods - Enumerator.superclass.instance_methods).each do |method_name|
       define_method(method_name) do |*rest, **kwrest, &block|
         if kwrest.empty?
@@ -57,10 +61,31 @@ module Pluggaloid
           r = @enumerator.__send__(method_name, *rest, **kwrest, &block)
         end
         if r.is_a?(Enumerator::Lazy)
-          Stream.new(r)
+          Pluggaloid::Stream.new(r)
         else
           r
         end
+      end
+    end
+
+    class Merge
+      include Enumerable
+
+      def initialize(*sources)
+        @sources = sources
+      end
+
+      def each(&block)
+        fiber = Fiber.new do
+          loop do
+            block.call(Fiber.yield)
+          end
+        end
+        fiber.resume
+        @sources.each do |source|
+          source.each(&fiber.method(:resume))
+        end
+        self
       end
     end
   end

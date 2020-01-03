@@ -193,4 +193,31 @@ describe(Pluggaloid::Plugin) do
     assert_equal(1, sum.size)
     assert_equal((1..20).to_a, sum.last)
   end
+
+  it "merge" do
+    sum = sum1 = sum2 = 0
+    Pluggaloid::Plugin.create(:event) do
+      defevent :increase, prototype: [Integer, Pluggaloid::YIELD]
+      subscribe(:increase, 1).each do |v|
+        sum1 += v
+      end
+
+      subscribe(:increase, 2).each do |v|
+        sum2 += v
+      end
+
+      subscribe(:increase, 1).merge(subscribe(:increase, 2)).each do |v|
+        sum += v
+      end
+    end
+
+    eval_all_events do
+      Pluggaloid::Event[:increase].call(1, (1..10).to_a)
+      Pluggaloid::Event[:increase].call(2, (11..20).to_a)
+    end
+
+    assert_equal((1..10).to_a.sum, sum1)
+    assert_equal((11..20).to_a.sum, sum2)
+    assert_equal((1..20).to_a.sum, sum)
+  end
 end
