@@ -141,13 +141,18 @@ class Pluggaloid::Event
   end
 
   def yield_index
-    @yield_index ||= self.options[:prototype].index(Pluggaloid::YIELD)
+    unless defined?(@yield_index)
+      @yield_index = self.options[:prototype].index(Pluggaloid::YIELD)
+    end
+    @yield_index
   end
 
   private
   def call_all_listeners(args)
-    @subscribers[argument_hash(args)]&.each do |subscriber|
-      subscriber.call(*args)
+    if yield_index
+      @subscribers[argument_hash(args)]&.each do |subscriber|
+        subscriber.call(*args)
+      end
     end
     catch(:plugin_exit) do
       @listeners.each do |listener|
