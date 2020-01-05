@@ -32,6 +32,31 @@ describe(Pluggaloid::Plugin) do
     assert_equal(%i[one], sum)
   end
 
+  it "subscribe?" do
+    sum = []
+
+    Pluggaloid::Plugin.create(:event) do
+      defevent :increase, prototype: [Integer, Pluggaloid::YIELD]
+      subscribe(:increase, 1) do |v|
+      end
+    end
+    assert(Pluggaloid::Plugin[:event].subscribe?(:increase, 1))
+    refute(Pluggaloid::Plugin[:event].subscribe?(:increase, 2))
+
+  end
+
+  it "subscribe? returns always true if plugin listener exist" do
+    sum = []
+
+    Pluggaloid::Plugin.create(:event) do
+      defevent :increase, prototype: [Integer, Pluggaloid::YIELD]
+      on_increase do |i, y|
+      end
+    end
+    assert(Pluggaloid::Plugin[:event].subscribe?(:increase, 1))
+    assert(Pluggaloid::Plugin[:event].subscribe?(:increase, 2))
+  end
+
   it "subscribe enumerable" do
     sum = []
 

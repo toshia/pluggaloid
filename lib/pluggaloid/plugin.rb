@@ -144,6 +144,10 @@ module Pluggaloid
       end
     end
 
+    def subscribe?(event_name, *specs)
+      vm.Event[event_name].subscribe?(*specs)
+    end
+
     # このプラグインのHandlerTagを作る。
     # ブロックが渡された場合は、ブロックの中を実行し、ブロックの中で定義された
     # Handler全てにTagを付与する。

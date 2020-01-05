@@ -82,6 +82,10 @@ class Pluggaloid::Event
     self
   end
 
+  def subscribe?(*args)
+    !@listeners.empty? || @subscribers.key?(argument_hash(args))
+  end
+
   def delete_listener(listener)
     Lock.synchronize do
       @listeners = @listeners.dup
