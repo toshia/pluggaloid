@@ -142,7 +142,7 @@ class Pluggaloid::Event
 
   def yield_index
     unless defined?(@yield_index)
-      @yield_index = self.options[:prototype].index(Pluggaloid::STREAM)
+      @yield_index = self.options[:prototype]&.index(Pluggaloid::STREAM)
     end
     @yield_index
   end
