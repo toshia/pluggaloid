@@ -15,8 +15,8 @@ require 'delayer'
 module Pluggaloid
   VM = Struct.new(*%i<Delayer Plugin Event Listener Filter HandlerTag Subscriber>, keyword_init: true)
 
-  class Yield; end
-  YIELD = Yield.new.freeze
+  class PrototypeStream; end
+  STREAM = PrototypeStream.new.freeze
 
   def self.new(delayer)
     vm = VM.new(Delayer: delayer,

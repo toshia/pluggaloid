@@ -18,7 +18,7 @@ describe(Pluggaloid::Plugin) do
     sum = []
 
     Pluggaloid::Plugin.create(:event) do
-      defevent :increase, prototype: [Integer, Pluggaloid::YIELD]
+      defevent :increase, prototype: [Integer, Pluggaloid::STREAM]
       subscribe(:increase, 1) do |v|
         sum = v
       end
@@ -36,7 +36,7 @@ describe(Pluggaloid::Plugin) do
     sum = []
 
     Pluggaloid::Plugin.create(:event) do
-      defevent :increase, prototype: [Integer, Pluggaloid::YIELD]
+      defevent :increase, prototype: [Integer, Pluggaloid::STREAM]
       subscribe(:increase, 1) do |v|
       end
     end
@@ -49,7 +49,7 @@ describe(Pluggaloid::Plugin) do
     sum = []
 
     Pluggaloid::Plugin.create(:event) do
-      defevent :increase, prototype: [Integer, Pluggaloid::YIELD]
+      defevent :increase, prototype: [Integer, Pluggaloid::STREAM]
       on_increase do |i, y|
       end
     end
@@ -61,7 +61,7 @@ describe(Pluggaloid::Plugin) do
     sum = []
 
     Pluggaloid::Plugin.create(:event) do
-      defevent :increase, prototype: [Integer, Pluggaloid::YIELD]
+      defevent :increase, prototype: [Integer, Pluggaloid::STREAM]
       subscribe(:increase, 1).each do |v|
         sum = v
       end
@@ -79,7 +79,7 @@ describe(Pluggaloid::Plugin) do
     sum = 0
     subscriber = nil
     Pluggaloid::Plugin.create(:event) do
-      defevent :increase, prototype: [Pluggaloid::YIELD]
+      defevent :increase, prototype: [Pluggaloid::STREAM]
       subscriber = subscribe(:increase) do |v|
         sum += v
       end
@@ -100,7 +100,7 @@ describe(Pluggaloid::Plugin) do
     sum = []
 
     Pluggaloid::Plugin.create(:event) do
-      defevent :increase, prototype: [Integer, Pluggaloid::YIELD]
+      defevent :increase, prototype: [Integer, Pluggaloid::STREAM]
       subscribe(:increase, 1).map{|v| v.to_s }.each do |v|
         sum << v
       end
@@ -119,7 +119,7 @@ describe(Pluggaloid::Plugin) do
     sum = []
 
     Pluggaloid::Plugin.create(:event) do
-      defevent :increase, prototype: [Integer, Pluggaloid::YIELD]
+      defevent :increase, prototype: [Integer, Pluggaloid::STREAM]
       subscribe(:increase, 1).each_slice(3).each do |v|
         sum << v
       end
@@ -145,7 +145,7 @@ describe(Pluggaloid::Plugin) do
     sum = []
 
     Pluggaloid::Plugin.create(:event) do
-      defevent :increase, prototype: [Integer, Pluggaloid::YIELD]
+      defevent :increase, prototype: [Integer, Pluggaloid::STREAM]
       subscribe(:increase, 1).throttle(0.001).each do |v|
         sum << v
       end
@@ -173,7 +173,7 @@ describe(Pluggaloid::Plugin) do
     sum = []
 
     Pluggaloid::Plugin.create(:event) do
-      defevent :increase, prototype: [Integer, Pluggaloid::YIELD]
+      defevent :increase, prototype: [Integer, Pluggaloid::STREAM]
       subscribe(:increase, 1).debounce(0.01).each do |v|
         sum << v
       end
@@ -197,7 +197,7 @@ describe(Pluggaloid::Plugin) do
     sum = []
 
     Pluggaloid::Plugin.create(:event) do
-      defevent :increase, prototype: [Integer, Pluggaloid::YIELD]
+      defevent :increase, prototype: [Integer, Pluggaloid::STREAM]
       subscribe(:increase, 1).buffer(0.01).each do |v|
         sum << v
       end
@@ -222,7 +222,7 @@ describe(Pluggaloid::Plugin) do
   it "merge" do
     sum = sum1 = sum2 = 0
     Pluggaloid::Plugin.create(:event) do
-      defevent :increase, prototype: [Integer, Pluggaloid::YIELD]
+      defevent :increase, prototype: [Integer, Pluggaloid::STREAM]
       subscribe(:increase, 1).each do |v|
         sum1 += v
       end
