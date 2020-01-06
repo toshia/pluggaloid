@@ -18,6 +18,7 @@ class Pluggaloid::Event
     @options = {}
     @listeners = [].freeze
     @filters = [].freeze
+    @subscribers = {}
   end
 
   def vm
@@ -62,16 +63,27 @@ class Pluggaloid::Event
         event_filter.filtering(*acm) } } end
 
   def add_listener(listener)
-    unless listener.is_a? Pluggaloid::Listener
-      raise Pluggaloid::ArgumentError, "First argument must be Pluggaloid::Listener, but given #{listener.class}."
-    end
-    Lock.synchronize do
-      if @listeners.map(&:slug).include?(listener.slug)
-        raise Pluggaloid::DuplicateListenerSlugError, "Listener slug #{listener.slug} already exists."
+    case listener
+    when Pluggaloid::Listener
+      Lock.synchronize do
+        if @listeners.map(&:slug).include?(listener.slug)
+          raise Pluggaloid::DuplicateListenerSlugError, "Listener slug #{listener.slug} already exists."
+        end
+        @listeners = [*@listeners, listener].freeze
       end
-      @listeners = [*@listeners, listener].freeze
+    when Pluggaloid::Subscriber
+      Lock.synchronize do
+        @subscribers[listener.accepted_hash] ||= []
+        @subscribers[listener.accepted_hash] << listener
+      end
+    else
+      raise Pluggaloid::ArgumentError, "First argument must be Pluggaloid::Listener or Pluggaloid::Subscriber, but given #{listener.class}."
     end
     self
+  end
+
+  def subscribe?(*args)
+    !@listeners.empty? || @subscribers.key?(argument_hash(args))
   end
 
   def delete_listener(listener)
@@ -79,6 +91,17 @@ class Pluggaloid::Event
       @listeners = @listeners.dup
       @listeners.delete(listener)
       @listeners.freeze
+    end
+    self
+  end
+
+  def delete_subscriber(listener)
+    Lock.synchronize do
+      ss = @subscribers[listener.accepted_hash]
+      ss.delete(listener)
+      if ss.empty?
+        @subscribers.delete(listener.accepted_hash)
+      end
     end
     self
   end
@@ -109,8 +132,28 @@ class Pluggaloid::Event
     self
   end
 
+  def argument_hash(args)
+    args.each_with_index.map do |item, i|
+      if i != yield_index
+        item.hash
+      end
+    end.compact.freeze
+  end
+
+  def yield_index
+    unless defined?(@yield_index)
+      @yield_index = self.options[:prototype].index(Pluggaloid::STREAM)
+    end
+    @yield_index
+  end
+
   private
   def call_all_listeners(args)
+    if yield_index
+      @subscribers[argument_hash(args)]&.each do |subscriber|
+        subscriber.call(*args)
+      end
+    end
     catch(:plugin_exit) do
       @listeners.each do |listener|
         listener.call(*args)

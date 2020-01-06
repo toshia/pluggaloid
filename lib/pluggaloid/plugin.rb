@@ -18,12 +18,14 @@ module Pluggaloid
         @vm ||= begin
                   raise Pluggaloid::NoDefaultDelayerError, "Default Delayer was not set." unless Delayer.default
                   vm = Pluggaloid::VM.new(
-                    Delayer.default,
-                    self,
-                    Pluggaloid::Event,
-                    Pluggaloid::Listener,
-                    Pluggaloid::Filter,
-                    Pluggaloid::HandlerTag)
+                    Delayer: Delayer.default,
+                    Plugin: self,
+                    Event: Pluggaloid::Event,
+                    Listener: Pluggaloid::Listener,
+                    Filter: Pluggaloid::Filter,
+                    HandlerTag: Pluggaloid::HandlerTag,
+                    Subscriber: Pluggaloid::Subscriber
+                  )
                   vm.Event.vm = vm end end
 
       # プラグインのインスタンスを返す。
@@ -126,6 +128,26 @@ module Pluggaloid
       @filters << result
       result end
 
+    def subscribe(event_name, *specs, **kwrest, &block)
+      if block
+        result = vm.Subscriber.new(vm.Event[event_name], *specs, **kwrest, &block)
+        @events << result
+        result
+      else
+        Stream.new(
+          Enumerator.new do |yielder|
+            @events << vm.Subscriber.new(vm.Event[event_name], *specs, **kwrest) do |stream|
+              stream.each(&yielder.method(:<<))
+            end
+          end.lazy
+        )
+      end
+    end
+
+    def subscribe?(event_name, *specs)
+      vm.Event[event_name].subscribe?(*specs)
+    end
+
     # このプラグインのHandlerTagを作る。
     # ブロックが渡された場合は、ブロックの中を実行し、ブロックの中で定義された
     # Handler全てにTagを付与する。
@@ -187,7 +209,7 @@ module Pluggaloid
     def detach(*args)
       listener = args.last
       case listener
-      when vm.Listener
+      when vm.Listener, vm.Subscriber
         @events.delete(listener)
         listener.detach
       when vm.Filter
