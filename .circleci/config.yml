@@ -1,0 +1,40 @@
+version: '2.1'
+
+executors:
+  ruby:
+    parameters:
+      tag:
+        type: string
+    docker:
+      - image: circleci/ruby:<< parameters.tag >>
+
+jobs:
+  build:
+    parameters:
+       ruby-version:
+         type: string
+    executor:
+      name: ruby
+      tag: << parameters.ruby-version >>
+    steps:
+    - checkout
+    - run:
+        name: Which bundler?
+        command: bundle -v
+    - run:
+        command: bundle install --path vendor/bundle
+    - run:
+        name: test
+        command: bundle exec rake test
+workflows:
+  build:
+    jobs:
+      - build:
+          name: 'ruby-2.5'
+          ruby-version: '2.5.7'
+      - build:
+          name: 'ruby-2.6'
+          ruby-version: '2.6.5'
+      - build:
+          name: 'ruby-2.7'
+          ruby-version: '2.7.0'

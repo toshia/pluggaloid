@@ -3,6 +3,8 @@
 mikutterのプラグイン機構です。
 登録したプラグイン同士がイベントを使って通信できるようになります。
 
+[![toshia](https://circleci.com/gh/toshia/pluggaloid.svg?style=svg)](https://circleci.com/gh/toshia/pluggaloid)
+
 ## Installation
 
 Add this line to your application's Gemfile:
