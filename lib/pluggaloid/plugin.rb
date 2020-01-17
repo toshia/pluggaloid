@@ -116,7 +116,7 @@ module Pluggaloid
 
     # イベントフィルタを新しく登録する
     # ==== Args
-    # [event] 監視するEventのインスタンス
+    # [event_name] イベント名(String | Symbol)
     # [name:] 名前(String | nil)
     # [slug:] フィルタスラッグ(Symbol | nil)
     # [tags:] Pluggaloid::HandlerTag|Array フィルタのタグ
@@ -146,6 +146,17 @@ module Pluggaloid
 
     def subscribe?(event_name, *specs)
       vm.Event[event_name].subscribe?(*specs)
+    end
+
+    # フィルタ _event_name_ を実行し、defeventでPluggaloid::COLLECTと
+    # 宣言されている引数の結果を列挙するEnumeratorを返す
+    # ==== Args
+    # [event_name] イベント名(String | Symbol)
+    # [*specs] Pluggaloid::COLLECT以外の引数
+    # ==== Return
+    # [Enumerator]
+    def collect(event_name, *specs)
+      vm.Event[event_name].collect(*specs)
     end
 
     # このプラグインのHandlerTagを作る。
@@ -197,7 +208,6 @@ module Pluggaloid
         @filters.dup
       end
     end
-
 
     # イベントを削除する。
     # 引数は、Pluggaloid::ListenerかPluggaloid::Filterのみ(on_*やfilter_*の戻り値)。
