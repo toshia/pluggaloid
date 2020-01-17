@@ -14,7 +14,7 @@ class Pluggaloid::Subscriber < Pluggaloid::Handler
   def initialize(event, *specs, **kwrest, &callback)
     super(event, **kwrest)
     @callback = callback
-    @accepted_hash = @event.argument_hash(specs)
+    @accepted_hash = @event.argument_hash(specs, @event.stream_index)
     event.add_listener(self)
   end
 
@@ -22,7 +22,7 @@ class Pluggaloid::Subscriber < Pluggaloid::Handler
   # ==== Args
   # [stream] イベントの引数
   def call(*args)
-    @callback.call(args[@event.yield_index])
+    @callback.call(args[@event.stream_index])
   end
 
   # このリスナを削除する
