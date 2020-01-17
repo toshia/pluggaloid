@@ -1,4 +1,5 @@
 require "pluggaloid/version"
+require 'pluggaloid/collection'
 require "pluggaloid/plugin"
 require 'pluggaloid/stream'
 require 'pluggaloid/event'

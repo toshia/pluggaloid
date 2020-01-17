@@ -159,6 +159,28 @@ module Pluggaloid
       vm.Event[event_name].collect(*specs)
     end
 
+    # 追加・削除がフィルタに反映されるコレクションオブジェクトを作成する。
+    # 同時に _event_name_ にフィルタが定義され、フィルタが呼ばれると
+    # その時点のコレクションオブジェクトの内容を全て列挙する。
+    # フィルタと対になるコレクションオブジェクトは、 _&block_ の引数として渡される。
+    # ==== Args
+    # [event_name] イベント名(String | Symbol)
+    # [*specs] Pluggaloid::COLLECT以外の引数
+    # [&block] コレクションオブジェクトを受け取って一度だけ実行されるblock
+    # ==== Return
+    # _&block_ の戻り値
+    def collection(event_name, *specs, &block)
+      event = vm.Event[event_name]
+      mutation = Pluggaloid::Collection.new(event, *specs)
+      add_event_filter(event_name) do |*args|
+        if mutation.argument_hash_same?(args)
+          mutation.values.each(&args[event.collect_index].method(:<<))
+        end
+        args
+      end
+      block.call(mutation)
+    end
+
     # このプラグインのHandlerTagを作る。
     # ブロックが渡された場合は、ブロックの中を実行し、ブロックの中で定義された
     # Handler全てにTagを付与する。
