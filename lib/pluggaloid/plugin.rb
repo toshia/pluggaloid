@@ -271,7 +271,8 @@ module Pluggaloid
     # [event_name] イベント名
     # [options] イベントの定義
     def defevent(event_name, options={})
-      vm.Event[event_name].options.merge!({plugin: self}.merge(options)) end
+      vm.Event[event_name].defevent({ plugin: self, **options })
+    end
 
     # DSLメソッドを新しく追加する。
     # 追加されたメソッドは呼ぶと &callback が呼ばれ、その戻り値が返される。引数も順番通り全て &callbackに渡される

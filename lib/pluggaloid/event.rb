@@ -25,6 +25,20 @@ class Pluggaloid::Event
     @options[:prototype]
   end
 
+  # イベント _event_name_ を宣言する
+  # ==== Args
+  # [new_options] イベントの定義
+  def defevent(new_options)
+    @options.merge!(new_options)
+    if collect_index
+      new_proto = self.prototype.dup
+      new_proto[self.collect_index] = Pluggaloid::STREAM
+      collection_add_event.defevent(prototype: new_proto)
+      collection_delete_event.defevent(prototype: new_proto)
+    end
+    self
+  end
+
   def vm
     self.class.vm end
 
@@ -170,6 +184,14 @@ class Pluggaloid::Event
       cargs.insert(collect_index, yielder)
       filtering(*cargs)
     end
+  end
+
+  def collection_add_event
+    self.class['%{name}__add' % {name: name}]
+  end
+
+  def collection_delete_event
+    self.class['%{name}__delete' % {name: name}]
   end
 
   private
