@@ -21,6 +21,10 @@ class Pluggaloid::Event
     @subscribers = {}
   end
 
+  def prototype
+    @options[:prototype]
+  end
+
   def vm
     self.class.vm end
 
@@ -142,14 +146,14 @@ class Pluggaloid::Event
 
   def stream_index
     unless defined?(@stream_index)
-      @stream_index = self.options[:prototype]&.index(Pluggaloid::STREAM)
+      @stream_index = self.prototype&.index(Pluggaloid::STREAM)
     end
     @stream_index
   end
 
   def collect_index
     unless defined?(@collect_index)
-      @collect_index = self.options[:prototype]&.index(Pluggaloid::COLLECT)
+      @collect_index = self.prototype&.index(Pluggaloid::COLLECT)
     end
     @collect_index
   end
