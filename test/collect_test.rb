@@ -62,6 +62,37 @@ describe(Pluggaloid::Plugin) do
       end
       assert_equal([1, 3], Pluggaloid::Event[:list].collect(3).to_a)
     end
+
+    it 'rewind' do
+      # added = []
+      # deleted = []
+      Pluggaloid::Plugin.create(:event) do
+        defevent :list, prototype: [Integer, Pluggaloid::COLLECT]
+
+        collection(:list, 3) do |collector|
+          collector << 1 << 2 << 3
+          on_rewind do |e|
+            collector.rewind do |lst|
+              e
+            end
+          end
+        end
+
+        # subscribe(:list__add) do |elm|
+        #   added << elm
+        # end
+
+        # subscribe(:list__delete) do |elm|
+        #   deleted << elm
+        # end
+      end
+      eval_all_events do
+        Pluggaloid::Event[:rewind].call([2, 3, 4])
+      end
+      assert_equal([2, 3, 4], Pluggaloid::Event[:list].collect(3).to_a)
+      # assert_equal([4], added)
+      # assert_equal([1], deleted)
+    end
   end
 
 end

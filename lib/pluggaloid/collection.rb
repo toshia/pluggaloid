@@ -10,15 +10,24 @@ module Pluggaloid
       @values = [].freeze
     end
 
-    def add(v)
-      @values = [*@values, v].freeze
+    def add(*v)
+      rewind do |privitive|
+        privitive + v
+      end
       self
     end
     alias_method :<<, :add
 
-    def delete(v)
-      @values = (@values - [v]).freeze
+    def delete(*v)
+      rewind do |privitive|
+        privitive - v
+      end
       self
+    end
+
+    def rewind(&block)
+      new_values = block.(@values.dup)
+      @values = new_values.freeze
     end
 
     def argument_hash_same?(specs)
