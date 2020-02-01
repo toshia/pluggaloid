@@ -1,4 +1,5 @@
 require "pluggaloid/version"
+require 'pluggaloid/collection'
 require "pluggaloid/plugin"
 require 'pluggaloid/stream'
 require 'pluggaloid/event'
@@ -16,7 +17,9 @@ module Pluggaloid
   VM = Struct.new(*%i<Delayer Plugin Event Listener Filter HandlerTag Subscriber>, keyword_init: true)
 
   class PrototypeStream; end
+  class PrototypeCollect; end
   STREAM = PrototypeStream.new.freeze
+  COLLECT = PrototypeCollect.new.freeze
 
   def self.new(delayer)
     vm = VM.new(Delayer: delayer,

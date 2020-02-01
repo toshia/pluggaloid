@@ -21,6 +21,24 @@ class Pluggaloid::Event
     @subscribers = {}
   end
 
+  def prototype
+    @options[:prototype]
+  end
+
+  # イベント _event_name_ を宣言する
+  # ==== Args
+  # [new_options] イベントの定義
+  def defevent(new_options)
+    @options.merge!(new_options)
+    if collect_index
+      new_proto = self.prototype.dup
+      new_proto[self.collect_index] = Pluggaloid::STREAM
+      collection_add_event.defevent(prototype: new_proto)
+      collection_delete_event.defevent(prototype: new_proto)
+    end
+    self
+  end
+
   def vm
     self.class.vm end
 
@@ -83,7 +101,7 @@ class Pluggaloid::Event
   end
 
   def subscribe?(*args)
-    !@listeners.empty? || @subscribers.key?(argument_hash(args))
+    !@listeners.empty? || @subscribers.key?(argument_hash(args, stream_index))
   end
 
   def delete_listener(listener)
@@ -132,25 +150,61 @@ class Pluggaloid::Event
     self
   end
 
-  def argument_hash(args)
+  def argument_hash(args, exclude_index)
     args.each_with_index.map do |item, i|
-      if i != yield_index
+      if i != exclude_index
         item.hash
       end
     end.compact.freeze
   end
 
-  def yield_index
-    unless defined?(@yield_index)
-      @yield_index = self.options[:prototype]&.index(Pluggaloid::STREAM)
+  def stream_index
+    unless defined?(@stream_index)
+      @stream_index = self.prototype&.index(Pluggaloid::STREAM)
     end
-    @yield_index
+    @stream_index
+  end
+
+  def collect_index
+    unless defined?(@collect_index)
+      @collect_index = self.prototype&.index(Pluggaloid::COLLECT)
+    end
+    @collect_index
+  end
+
+  # defeventで定義されたprototype引数に _Pluggaloid::COLLECT_ を含むイベントに対して使える。
+  # フィルタの _Pluggaloid::COLLECT_ 引数に空の配列を渡して実行したあと、その配列を返す。
+  # ==== Args
+  # [*args] Pluggaloid::COLLECT 以外の引数のリスト
+  # ==== Return
+  # [Array] フィルタ実行結果
+  def collect(*args)
+    specified_index = args.index(Pluggaloid::COLLECT)
+    specified_index&.yield_self(&args.method(:delete_at))
+    insert_index = collect_index || specified_index
+    if insert_index
+      Enumerator.new do |yielder|
+        cargs = args.dup
+        cargs.insert(insert_index, yielder)
+        filtering(*cargs)
+      end
+    else
+      raise Pluggaloid::UndefinedCollectionIndexError, 'To call collect(), it must define prototype arguments include `Pluggaloid::COLLECT\'.'
+    end
+  end
+
+  def collection_add_event
+    self.class['%{name}__add' % {name: name}]
+  end
+
+  def collection_delete_event
+    self.class['%{name}__delete' % {name: name}]
   end
 
   private
   def call_all_listeners(args)
-    if yield_index
-      @subscribers[argument_hash(args)]&.each do |subscriber|
+    if stream_index
+      @subscribers[argument_hash(args, stream_index)]&.each do |subscriber|
         subscriber.call(*args)
       end
     end

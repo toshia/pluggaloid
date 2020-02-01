@@ -11,4 +11,6 @@ module Pluggaloid
   class NoDefaultDelayerError < Error; end
 
   class DuplicateListenerSlugError < Error; end
+
+  class UndefinedCollectionIndexError < Error; end
 end
