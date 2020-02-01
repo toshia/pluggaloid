@@ -64,6 +64,17 @@ module Pluggaloid
       def filtering(event_name, *args)
         vm.Event[event_name].filtering(*args) end
 
+      # フィルタ _event_name_ を実行し、defeventでPluggaloid::COLLECTと
+      # 宣言されている引数の結果を列挙するEnumeratorを返す
+      # ==== Args
+      # [event_name] イベント名(String | Symbol)
+      # [*specs] Pluggaloid::COLLECT以外の引数
+      # ==== Return
+      # [Enumerator]
+      def collect(event_name, *specs)
+        vm.Event[event_name].collect(*specs)
+      end
+
       # 互換性のため
       def uninstall(plugin_name)
         self[plugin_name].uninstall end
@@ -148,15 +159,8 @@ module Pluggaloid
       vm.Event[event_name].subscribe?(*specs)
     end
 
-    # フィルタ _event_name_ を実行し、defeventでPluggaloid::COLLECTと
-    # 宣言されている引数の結果を列挙するEnumeratorを返す
-    # ==== Args
-    # [event_name] イベント名(String | Symbol)
-    # [*specs] Pluggaloid::COLLECT以外の引数
-    # ==== Return
-    # [Enumerator]
     def collect(event_name, *specs)
-      vm.Event[event_name].collect(*specs)
+      self.class.collect(event_name, *specs)
     end
 
     # 追加・削除がフィルタに反映されるコレクションオブジェクトを作成する。
