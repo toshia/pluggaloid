@@ -179,6 +179,9 @@ class Pluggaloid::Event
   # ==== Return
   # [Array] フィルタ実行結果
   def collect(*args)
+    unless collect_index
+      raise Pluggaloid::UndefinedCollectionIndexError, 'To call collect(), it must define prototype arguments include `Pluggaloid::COLLECT\'.'
+    end
     Enumerator.new do |yielder|
       cargs = args.dup
       cargs.insert(collect_index, yielder)

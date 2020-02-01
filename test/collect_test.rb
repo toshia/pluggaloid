@@ -27,6 +27,19 @@ describe(Pluggaloid::Plugin) do
     assert_equal([0, 1, 2], Pluggaloid::Event[:list].collect(3).to_a)
   end
 
+  it 'fail when collect with undefined' do
+    Pluggaloid::Plugin.create(:event) do
+      filter_list do |i, yielder|
+        i.times(&yielder.method(:<<))
+        [i, yielder]
+      end
+    end
+
+    assert_raises(Pluggaloid::UndefinedCollectionIndexError) do
+      Pluggaloid::Event[:list].collect(3)
+    end
+  end
+
   describe 'collection' do
     it 'add' do
       Pluggaloid::Plugin.create(:event) do
