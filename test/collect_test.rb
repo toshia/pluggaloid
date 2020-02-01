@@ -40,6 +40,30 @@ describe(Pluggaloid::Plugin) do
     end
   end
 
+  it 'success caller arguments include Pluggaloid::COLLECT when collect with undefined' do
+    Pluggaloid::Plugin.create(:event) do
+      filter_list do |i, yielder|
+        i.times(&yielder.method(:<<))
+        [i, yielder]
+      end
+    end
+
+    assert_equal([0, 1, 2], Pluggaloid::Event[:list].collect(3, Pluggaloid::COLLECT).to_a)
+  end
+
+  it 'success different caller argument specific and prototype definition' do
+    Pluggaloid::Plugin.create(:event) do
+      defevent :list, prototype: [Integer, Pluggaloid::COLLECT]
+
+      filter_list do |i, yielder|
+        i.times(&yielder.method(:<<))
+        [i, yielder]
+      end
+    end
+
+    assert_equal([0, 1, 2], Pluggaloid::Event[:list].collect(Pluggaloid::COLLECT, 3).to_a)
+  end
+
   describe 'collection' do
     it 'add' do
       Pluggaloid::Plugin.create(:event) do
