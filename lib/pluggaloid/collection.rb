@@ -13,15 +13,15 @@ module Pluggaloid
     end
 
     def add(*v)
-      rewind do |privitive|
-        privitive + v
+      rewind do |primitive|
+        primitive + v
       end
     end
     alias_method :<<, :add
 
     def delete(*v)
-      rewind do |privitive|
-        privitive - v
+      rewind do |primitive|
+        primitive - v
       end
     end
 
