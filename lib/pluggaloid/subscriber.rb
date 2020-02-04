@@ -12,9 +12,10 @@ class Pluggaloid::Subscriber < Pluggaloid::Handler
   # [tags:] Pluggaloid::HandlerTag|Array リスナのタグ
   # [&callback] コールバック
   def initialize(event, *specs, **kwrest, &callback)
+    raise Pluggaloid::UndefinedStreamIndexError, 'To call subscribe(), it must define prototype arguments include `Pluggaloid::STREAM\'.' unless event.stream_index
     super(event, **kwrest)
     @callback = callback
-    @accepted_hash = @event.argument_hash(specs, @event.stream_index)
+    @accepted_hash = @event.argument_hash(specs, nil)
     event.add_listener(self)
   end
 

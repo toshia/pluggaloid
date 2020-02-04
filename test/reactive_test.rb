@@ -32,9 +32,33 @@ describe(Pluggaloid::Plugin) do
     assert_equal(%i[one], sum)
   end
 
-  it "subscribe?" do
+  it "subscribe 2" do
     sum = []
 
+    Pluggaloid::Plugin.create(:event) do
+      defevent :increase, prototype: [Pluggaloid::STREAM, Integer]
+      subscribe(:increase, 1) do |v|
+        sum = v
+      end
+    end
+
+    eval_all_events do
+      Pluggaloid::Event[:increase].call([:one], 1)
+      Pluggaloid::Event[:increase].call([:two], 2)
+    end
+
+    assert_equal(%i[one], sum)
+  end
+
+  it "raises subscribe without definition" do
+    assert_raises Pluggaloid::UndefinedStreamIndexError do
+      Pluggaloid::Plugin.create(:event) do
+        subscribe(:increase, 1) { ; }
+      end
+    end
+  end
+
+  it "subscribe?" do
     Pluggaloid::Plugin.create(:event) do
       defevent :increase, prototype: [Integer, Pluggaloid::STREAM]
       subscribe(:increase, 1) do |v|
@@ -46,8 +70,6 @@ describe(Pluggaloid::Plugin) do
   end
 
   it "subscribe? returns always true if plugin listener exist" do
-    sum = []
-
     Pluggaloid::Plugin.create(:event) do
       defevent :increase, prototype: [Integer, Pluggaloid::STREAM]
       on_increase do |i, y|

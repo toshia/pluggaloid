@@ -12,5 +12,7 @@ module Pluggaloid
 
   class DuplicateListenerSlugError < Error; end
 
+  class UndefinedStreamIndexError < Error; end
+
   class UndefinedCollectionIndexError < Error; end
 end
