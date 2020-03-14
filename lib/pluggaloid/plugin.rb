@@ -24,7 +24,8 @@ module Pluggaloid
                     Listener: Pluggaloid::Listener,
                     Filter: Pluggaloid::Filter,
                     HandlerTag: Pluggaloid::HandlerTag,
-                    Subscriber: Pluggaloid::Subscriber
+                    Subscriber: Pluggaloid::Subscriber,
+                    StreamGenerator: Pluggaloid::StreamGenerator
                   )
                   vm.Event.vm = vm end end
 
@@ -138,6 +139,10 @@ module Pluggaloid
       result = vm.Filter.new(vm.Event[event_name], **kwrest, &callback)
       @filters << result
       result end
+
+    def generate(event_name, *specs, **kwrest, &block)
+      vm.StreamGenerator.new(vm.Event[event_name], *specs, plugin: self, **kwrest, &block)
+    end
 
     def subscribe(event_name, *specs, **kwrest, &block)
       if block

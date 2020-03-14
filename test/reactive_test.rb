@@ -58,7 +58,7 @@ describe(Pluggaloid::Plugin) do
     end
   end
 
-  it "subscribe?" do
+  it "subscribe? first value" do
     Pluggaloid::Plugin.create(:event) do
       defevent :increase, prototype: [Integer, Pluggaloid::STREAM]
       subscribe(:increase, 1) do |v|
@@ -66,7 +66,16 @@ describe(Pluggaloid::Plugin) do
     end
     assert(Pluggaloid::Plugin[:event].subscribe?(:increase, 1))
     refute(Pluggaloid::Plugin[:event].subscribe?(:increase, 2))
+  end
 
+  it "subscribe? last value" do
+    Pluggaloid::Plugin.create(:event) do
+      defevent :increase, prototype: [Pluggaloid::STREAM, Integer]
+      subscribe(:increase, 1) do |v|
+      end
+    end
+    assert(Pluggaloid::Plugin[:event].subscribe?(:increase, 1))
+    refute(Pluggaloid::Plugin[:event].subscribe?(:increase, 2))
   end
 
   it "subscribe? returns always true if plugin listener exist" do
