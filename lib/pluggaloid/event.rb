@@ -105,8 +105,8 @@ class Pluggaloid::Event
     self
   end
 
-  def subscribe?(*args)
-    !@listeners.empty? || @subscribers.key?(argument_hash(args, stream_index))
+  def subscribe?(*specs)
+    !@listeners.empty? || @subscribers.key?(spec_hash(specs))
   end
 
   def delete_listener(listener)
@@ -173,6 +173,10 @@ class Pluggaloid::Event
         item.hash
       end
     end.compact.freeze
+  end
+
+  def spec_hash(specs)
+    specs.map(&:hash).freeze
   end
 
   def stream_index
