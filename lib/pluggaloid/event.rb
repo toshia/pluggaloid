@@ -18,7 +18,8 @@ class Pluggaloid::Event
     @options = {}
     @listeners = [].freeze
     @filters = [].freeze
-    @subscribers = {}
+    @subscribers = Hash.new { |h, k| h[k] = [] }
+    @stream_generators = Hash.new { |h, k| h[k] = Set.new }
   end
 
   def prototype
@@ -89,11 +90,15 @@ class Pluggaloid::Event
         end
         @listeners = [*@listeners, listener].freeze
       end
-    when Pluggaloid::Subscriber
-      Lock.synchronize do
-        @subscribers[listener.accepted_hash] ||= []
-        @subscribers[listener.accepted_hash] << listener
+      @stream_generators.values.each do |generators|
+        generators.each(&:on_subscribed)
       end
+    when Pluggaloid::Subscriber
+      accepted_hash = listener.accepted_hash
+      Lock.synchronize do
+        @subscribers[accepted_hash] << listener
+      end
+      @stream_generators.fetch(accepted_hash, nil)&.each(&:on_subscribed)
     else
       raise Pluggaloid::ArgumentError, "First argument must be Pluggaloid::Listener or Pluggaloid::Subscriber, but given #{listener.class}."
     end
@@ -119,6 +124,18 @@ class Pluggaloid::Event
       ss.delete(listener)
       if ss.empty?
         @subscribers.delete(listener.accepted_hash)
+      end
+    end
+    @stream_generators.fetch(listener.accepted_hash, nil)&.each(&:on_unsubscribed)
+    self
+  end
+
+  def delete_stream_generator(listener)
+    Lock.synchronize do
+      ss = @stream_generators[listener.accepted_hash]
+      ss.delete(listener)
+      if ss.empty?
+        @stream_generators.delete(listener.accepted_hash)
       end
     end
     self
@@ -191,6 +208,11 @@ class Pluggaloid::Event
     else
       raise Pluggaloid::UndefinedCollectionIndexError, 'To call collect(), it must define prototype arguments include `Pluggaloid::COLLECT\'.'
     end
+  end
+
+  def register_stream_generator(stream_generator)
+    @stream_generators[stream_generator.accepted_hash] << stream_generator
+    self
   end
 
   def collection_add_event

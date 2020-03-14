@@ -15,4 +15,6 @@ module Pluggaloid
   class UndefinedStreamIndexError < Error; end
 
   class UndefinedCollectionIndexError < Error; end
+
+  class NoReceiverError < Error; end
 end
