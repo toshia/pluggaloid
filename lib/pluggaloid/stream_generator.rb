@@ -64,11 +64,15 @@ class Pluggaloid::StreamGenerator < Pluggaloid::Handler
       @alive = true
     end
 
-    def add(value)
+    def bulk_add(lst)
       raise Pluggaloid::NoReceiverError, "All event listener of #{self.class} already detached." if die?
       args = @args.dup
-      args.insert(@event.stream_index, [value])
+      args.insert(@event.stream_index, lst)
       @event.call(*args)
+    end
+
+    def add(value)
+      bulk_add([value])
     end
     alias_method :<<, :add
 
