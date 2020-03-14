@@ -25,7 +25,7 @@ class Pluggaloid::StreamGenerator < Pluggaloid::Handler
   end
 
   def on_unsubscribed
-    subscribe_state = @event.subscribe?(*@specs)
+    subscribe_state = @event.subscribe_hash?(@accepted_hash)
     if @last_subscribe_state && !subscribe_state
       @last_subscribe_state = false
       subscribe_stop

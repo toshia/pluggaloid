@@ -105,8 +105,14 @@ class Pluggaloid::Event
     self
   end
 
+  # subscribe(_*specs_) で、ストリームの受信をしようとしているリスナが定義されていればtrueを返す。
+  # on_* で通常のイベントリスナが登録されて居る場合は、 _*specs_ の内容に関わらず常にtrueを返す。
   def subscribe?(*specs)
-    !@listeners.empty? || @subscribers.key?(spec_hash(specs))
+    !@listeners.empty? || @subscribers.key?(argument_hash(specs, nil))
+  end
+
+  def subscribe_hash?(hash)   # :nodoc:
+    !@listeners.empty? || @subscribers.key?(hash)
   end
 
   def delete_listener(listener)
@@ -173,10 +179,6 @@ class Pluggaloid::Event
         item.hash
       end
     end.compact.freeze
-  end
-
-  def spec_hash(specs)
-    specs.map(&:hash).freeze
   end
 
   def stream_index
