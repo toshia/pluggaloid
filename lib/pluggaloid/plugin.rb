@@ -181,7 +181,7 @@ module Pluggaloid
     def collection(event_name, *specs, &block)
       event = vm.Event[event_name]
       mutation = Pluggaloid::Collection.new(event, *specs)
-      add_event_filter(event_name) do |*args|
+      add_event_filter(event_name, name: 'collection(%s line %i)' % block.source_location) do |*args|
         if mutation.argument_hash_same?(args)
           mutation.values.each(&args[event.collect_index].method(:<<))
         end

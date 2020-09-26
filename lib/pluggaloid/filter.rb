@@ -19,7 +19,8 @@ class Pluggaloid::Filter < Pluggaloid::Handler
   # [tags:] Pluggaloid::HandlerTag|Array フィルタのタグ
   # [&callback] コールバック
   def initialize(event, **kwrest, &callback)
-    super
+    kwrest[:name] ||= '%s line %i' % callback.source_location
+    super(event, **kwrest)
     @callback = callback
     event.add_filter self end
 
