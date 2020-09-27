@@ -51,7 +51,9 @@ describe(Pluggaloid::Network) do
       end
 
       it 'has 16 nodes in network' do
-        assert_equal 16, @vms[0].vm_map.size
+        @vms.each do |v|
+          assert_equal 16, v.vm_map.size
+        end
       end
 
       it 'depth of a' do
@@ -81,5 +83,15 @@ describe(Pluggaloid::Network) do
     a.connect(b)
     assert_equal Set[b], a.genus
     assert_equal Set[a], b.genus
+  end
+
+  it 'raises in try connect across other network' do
+    @n1 = 2.times.map { |c| @klass.new(c) }
+    @n2 = 2.times.map { |c| @klass.new(c+2) }
+    @n1.each_cons(2) { |a, b| a.connect(b) }
+    @n2.each_cons(2) { |a, b| a.connect(b) }
+    assert_raises(RuntimeError) do
+      @n1[0].connect(@n2[0])
+    end
   end
 end

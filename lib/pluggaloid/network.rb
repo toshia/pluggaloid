@@ -2,25 +2,14 @@
 
 module Pluggaloid::Network
   def connect(other_vm)
+    raise 'Try to connect across other network' if !vm_lonely? && !other_vm.vm_lonely? && (other_vm.vm_map & vm_map).empty?
     if vm_map.add?(other_vm)
       other_vm.connect(self)
       (vm_map - [other_vm]).each do |vm|
         vm.connect(other_vm)
       end
-      # other_vm.connect(self)
-      # children(vmid).each do |vm|
-      #   vm.notify_network_added_vm(other_vm, root_id: vmid)
-      # end
     end
     self
-  end
-
-  def notify_network_added_vm(new_vm, root_id:)
-    if vm_map.add?(new_vm)
-      children(root_id).each do |vm|
-        vm.notify_network_added_vm(new_vm, root_id: netmask)
-      end
-    end
   end
 
   # root_idに於いて、直下の子の配列を返す。
@@ -77,7 +66,9 @@ module Pluggaloid::Network
 
   # root_idの中で、selfが何階層目にいるかを返す。
   def depth_in(root_id)
+    raise 'me not found' unless vm_map.include?(self)
     root = vm_map.find { |vm| vm.vmid == root_id }
+    raise "root_id #{root_id} does not exists in this network (#{@vm_map})." unless root
     nex = root_id[0] == vmid[0] ? root : root.counterpart
     return 0 if nex == self
     level = depth = 0
@@ -106,6 +97,10 @@ module Pluggaloid::Network
 
   def genus
     vm_map - [self]
+  end
+
+  def vm_lonely?
+    vm_map.size == 1
   end
 
   def counterpart
