@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'bundler/setup'
 require 'minitest/autorun'
 
@@ -63,18 +64,7 @@ describe(Pluggaloid::Network) do
       it 'depth of 4' do
         assert_equal 3, @vms[4].depth_in(0xa)
       end
-
-      # it 'has 9 and e as children in a' do
-      #   assert_equal [@vms[9], @vms[0xe]], @vms[0xa].children(0xa)
-      # end
     end
-    # it 'network contains 16 nodes' do
-    #   vms = 16.times.map { |c| @klass.new(c) }
-    #   vms.each_cons(2) { |a, b| a.connect(b) }
-    #   #vms[10].render_tree
-    #   assert_equal 16, vms[0].vm_map.size
-    # end
-
   end
 
   it 'genus returns except me' do
@@ -87,7 +77,7 @@ describe(Pluggaloid::Network) do
 
   it 'raises in try connect across other network' do
     @n1 = 2.times.map { |c| @klass.new(c) }
-    @n2 = 2.times.map { |c| @klass.new(c+2) }
+    @n2 = 2.times.map { |c| @klass.new(c + 2) }
     @n1.each_cons(2) { |a, b| a.connect(b) }
     @n2.each_cons(2) { |a, b| a.connect(b) }
     assert_raises(RuntimeError) do
