@@ -26,13 +26,12 @@ module Pluggaloid::Network
   # root_idに於いて、直下の子の配列を返す。
   # 直下の子は、最大で2つである。
   def children(root_id)
-    addr = vmid ^ root_id
     depth = depth_in(root_id)
-    mask = (1 << depth + 1) - 1
-    subnet = addr & mask
-    ancestor = genus.lazy.select { |vm| subnet == vm.vmid & mask }
-    lft, rgh = ancestor.partition { |vm| vm.vmid[depth + 1] == 1 }
-    [*lft.min_by(1, &:vmid), *rgh.min_by(1, &:vmid)]
+    addr = vmid ^ root_id
+    subnet = addr[0..(depth)]
+    ancestor = genus.lazy.select { |vm| (vm.vmid ^ root_id) > addr && subnet == (vm.vmid ^ root_id)[0..depth] }
+    lfts, rghs = ancestor.partition { |vm| (vm.vmid ^ root_id)[depth + 1] == 1 }
+    [lfts.min_by { |vm| vm.vmid ^ root_id }, rghs.min_by { |vm| vm.vmid ^ root_id }].compact
   end
 
   def call_event_in_child_vm(event_entity)
@@ -50,9 +49,7 @@ module Pluggaloid::Network
   end
 
   def render_tree(root_id=vmid, depth=0, level=0)
-    return if depth > 128
-
-    root = vm_map.find { |vm| vm.vmid == root_id }
+    return if level > 8
     addr = vmid ^ root_id
     subnet = addr[0..(depth)]
     ancestor = genus.lazy.select { |vm| (vm.vmid ^ root_id) > addr && subnet == (vm.vmid ^ root_id)[0..depth] }
@@ -80,23 +77,22 @@ module Pluggaloid::Network
 
   # root_idの中で、selfが何階層目にいるかを返す。
   def depth_in(root_id)
-    return 0 if vmid == root_id
-    root = vm_map.find{ |vm| vm.vmid == root_id }
-    cp = root.counterpart
-    return 0 if vmid == root_id
-    queue = [[root, 0], [cp, 0]]
-    100.times do
-      break if queue.empty?
-      vm, depth = queue.shift
-      addr = vm.vmid ^ root_id
-      mask = (1 << depth + 1) - 1
-      subnet = addr & mask
-      ancestor = genus.lazy.select { |vm| subnet == vm.vmid & mask }
-      lft, rgh = ancestor.partition { |vm| vm.vmid[depth + 1] == 1 }
-      [*lft.min_by(1, &:vmid), *rgh.min_by(1, &:vmid)].each do |vm|
-        return depth if self == vm
-        queue << [vm, depth + 1]
+    root = vm_map.find { |vm| vm.vmid == root_id }
+    nex = root_id[0] == vmid[0] ? root : root.counterpart
+    return 0 if nex == self
+    level = depth = 0
+    deck = vm_map.select { |vm| vm.vmid[0] == vmid[0] }.sort_by { |vm| vm.vmid ^ root_id }
+    target_addr = vmid ^ root_id
+    loop do
+      return level if nex == self
+      addr = nex.vmid ^ root_id
+      subnet = addr[0..depth]
+      nex, *deck = deck.select do |vm|
+        va = vm.vmid ^ root_id
+        va > addr && subnet == va[0..depth] && va[depth + 1] == target_addr[depth + 1]
       end
+      depth = next_depth(depth + 1, addr, nex.vmid ^ root_id)
+      level += 1
     end
   end
 

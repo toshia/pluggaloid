@@ -27,19 +27,51 @@ describe(Pluggaloid::Network) do
       assert_equal [a], b.children(2)
     end
 
-    it 'network contains 16 nodes' do
-      vms = 16.times.map { |c| @klass.new(c) }
-      vms.each_cons(2) { |a, b| a.connect(b) }
-      assert_equal 16, vms[0].vm_map.size
-    end
+    #       4 (00001110/1110)
+    #     c   (00000110/110)
+    #   8     (00000010/10)
+    #     0   (00001010/010)
+    # a       (00000000/0)
+    #     6   (00001100/100)
+    #   e     (00000100/00)
+    #     2   (00001000/000)
+    # ----
+    #       5 (00001111/1111)
+    #     d   (00000111/111)
+    #   9     (00000011/11)
+    #     1   (00001011/011)
+    # b       (00000001/1)
+    #     7   (00001101/101)
+    #   f     (00000101/01)
+    #     3   (00001001/001)
+    describe 'network contains 16 nodes' do
+      before do
+        @vms = 16.times.map { |c| @klass.new(c) }
+        @vms.each_cons(2) { |a, b| a.connect(b) }
+      end
 
-    it 'network contains 16 nodes 5' do
-      vms = 32.times.map { |c| @klass.new(c**3) }
-      vms.each_cons(2) { |a, b| a.connect(b) }
-      puts ''
-      vms[0].render_tree
-      #assert_equal 16, vms[0].vm_map.size
+      it 'has 16 nodes in network' do
+        assert_equal 16, @vms[0].vm_map.size
+      end
+
+      it 'depth of a' do
+        assert_equal 0, @vms[0xa].depth_in(0xa)
+      end
+
+      it 'depth of 4' do
+        assert_equal 3, @vms[4].depth_in(0xa)
+      end
+
+      # it 'has 9 and e as children in a' do
+      #   assert_equal [@vms[9], @vms[0xe]], @vms[0xa].children(0xa)
+      # end
     end
+    # it 'network contains 16 nodes' do
+    #   vms = 16.times.map { |c| @klass.new(c) }
+    #   vms.each_cons(2) { |a, b| a.connect(b) }
+    #   #vms[10].render_tree
+    #   assert_equal 16, vms[0].vm_map.size
+    # end
 
   end
 
