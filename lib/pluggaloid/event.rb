@@ -10,6 +10,8 @@ class Pluggaloid::Event
   # :priority :: Delayerの優先順位
   attr_accessor :options
 
+  attr_reader :filters
+
   # フィルタを別のスレッドで実行する。偽ならメインスレッドでフィルタを実行する
   @filter_another_thread = false
 
@@ -56,20 +58,9 @@ class Pluggaloid::Event
   # ==== Return
   # Delayerか、イベントを待ち受けているリスナがない場合はnil
   def call(*args)
-    if self.class.filter_another_thread
-      if @filters.empty?
-        vm.Delayer.new(*Array(priority)) do
-        call_all_listeners(args) end
-      else
-        Thread.new do
-          filtered_args = filtering(*args)
-          if filtered_args.is_a? Array
-            vm.Delayer.new(*Array(priority)) do
-              call_all_listeners(filtered_args) end end end end
-    else
-      vm.Delayer.new(*Array(priority)) do
-        args = filtering(*args) if not @filters.empty?
-        call_all_listeners(args) if args.is_a? Array end end end
+    ee = Pluggaloid::EventEntity.new(event_name: name, args: args, from: vm)
+    ee.fire(vm)
+  end
 
   # 引数 _args_ をフィルタリングした結果を返す
   # ==== Args
@@ -229,7 +220,6 @@ class Pluggaloid::Event
     self.class['%{name}__delete' % {name: name}]
   end
 
-  private
   def call_all_listeners(args)
     if stream_index
       @subscribers[argument_hash(args, stream_index)]&.each do |subscriber|

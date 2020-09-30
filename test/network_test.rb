@@ -5,7 +5,6 @@ require 'minitest/autorun'
 
 require 'pluggaloid'
 require_relative 'helper'
-require 'pry'
 
 describe(Pluggaloid::Network) do
   before do
