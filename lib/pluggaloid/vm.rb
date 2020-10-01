@@ -23,5 +23,16 @@ module Pluggaloid
         event_entity.fire(counterpart)
       end
     end
+
+    def call_filter_in_child_vm(filter_entity, srcs)
+      converted = children(filter_entity.from.vmid).reduce(srcs) do |args, vm|
+        filter_entity.fire(vm, args)
+      end
+      if filter_entity.from == self && counterpart
+        filter_entity.fire(counterpart, converted)
+      else
+        converted
+      end
+    end
   end
 end

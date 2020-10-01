@@ -37,11 +37,11 @@ describe(Pluggaloid) do
           called << :bar_a
         end
 
-        on_filter_twice do |num|
+        filter_twice do |num|
           [num * 2]
         end
 
-        on_filter_twice_a do |num|
+        filter_twice_a do |num|
           [num * 2]
         end
       end
@@ -54,7 +54,7 @@ describe(Pluggaloid) do
           called << :bar_b
         end
 
-        on_filter_twice do |num|
+        filter_twice do |num|
           [num * 2]
         end
       end
@@ -96,6 +96,26 @@ describe(Pluggaloid) do
           end
         end
       end
+
+      describe 'filter across vm' do
+        before do
+          @result, = @vm_b.Plugin.filtering(:twice_a, 5)
+        end
+
+        it 'filter called' do
+          assert_equal 10, @result
+        end
+      end
+
+      describe 'filter between vm' do
+        before do
+          @result, = @vm_b.Plugin.filtering(:twice, 5)
+        end
+
+        it 'filter called between' do
+          assert_equal 20, @result
+        end
+      end
     end                         # connected
 
     describe 'not connected' do
@@ -123,6 +143,26 @@ describe(Pluggaloid) do
           it 'event foo shouldn\'t be call in VM b' do
             refute @called.include?(:foo_b)
           end
+        end
+      end
+
+      describe 'filter across vm' do
+        before do
+          @result, = @vm_b.Plugin.filtering(:twice_a, 5)
+        end
+
+        it 'filter does not called' do
+          assert_equal 5, @result
+        end
+      end
+
+      describe 'filter between vm' do
+        before do
+          @result, = @vm_b.Plugin.filtering(:twice, 5)
+        end
+
+        it 'filter called vm_b only' do
+          assert_equal 10, @result
         end
       end
     end                         # not connected

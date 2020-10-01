@@ -68,9 +68,9 @@ class Pluggaloid::Event
   # ==== Return
   # フィルタされた引数の配列
   def filtering(*args)
-    catch(:filter_exit) {
-      @filters.reduce(args){ |acm, event_filter|
-        event_filter.filtering(*acm) } } end
+    ee = Pluggaloid::FilterEntity.new(event_name: name, args: args, from: vm)
+    ee.fire(vm, args)
+  end
 
   def add_listener(listener)
     case listener
