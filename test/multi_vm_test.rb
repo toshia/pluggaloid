@@ -54,6 +54,10 @@ describe(Pluggaloid) do
           called << :bar_b
         end
 
+        on_twice_a do |num|
+          called << num
+        end
+
         filter_twice do |num|
           [num * 2]
         end
@@ -93,6 +97,33 @@ describe(Pluggaloid) do
 
           it 'event foo should be call in VM b' do
             assert @called.include?(:foo_b)
+          end
+        end
+      end
+
+      describe 'event auto filter across vm' do
+        describe 'fire event in event listener side' do
+          before do
+            eval_all_events(@vm_b.Delayer) do
+              @vm_b.Plugin.call(:twice_a, 42)
+            end
+          end
+
+          it 'receive event and the args was filtered' do
+            assert @called.include?(84), "#{@called.inspect}"
+          end
+        end
+
+        describe 'fire event in filter handler side' do
+          before do
+            eval_all_events(@vm_a.Delayer) do
+              @vm_a.Plugin.call(:twice_a, 42)
+            end
+            eval_all_events(@vm_b.Delayer)
+          end
+
+          it 'receive event and the args was filtered' do
+            assert @called.include?(84), "#{@called.inspect}"
           end
         end
       end

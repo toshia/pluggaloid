@@ -12,6 +12,14 @@ module Pluggaloid::Network
     self
   end
 
+  # childrenの結果とcounterpartを合わせたもの。
+  def next_nodes(root_id)
+    [
+      *children(root_id),
+      (counterpart if root_id == vmid)
+    ].compact
+  end
+
   # root_idに於いて、直下の子の配列を返す。
   # 直下の子は、最大で2つである。
   def children(root_id)

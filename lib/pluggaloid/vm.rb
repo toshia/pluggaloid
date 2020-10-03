@@ -16,22 +16,25 @@ module Pluggaloid
     end
 
     def call_event_in_child_vm(event_entity)
-      children(event_entity.from.vmid).each do |vm|
+      next_nodes(event_entity.from.vmid).each do |vm|
         event_entity.fire(vm)
-      end
-      if event_entity.from == self && counterpart
-        event_entity.fire(counterpart)
       end
     end
 
     def call_filter_in_child_vm(filter_entity, srcs)
-      converted = children(filter_entity.from.vmid).reduce(srcs) do |args, vm|
+      next_nodes(filter_entity.from.vmid).reduce(srcs) do |args, vm|
         filter_entity.fire(vm, args)
       end
-      if filter_entity.from == self && counterpart
-        filter_entity.fire(counterpart, converted)
-      else
-        converted
+    end
+
+    def filtered_in_vm?(event_name)
+      !self.Event[event_name].filters.empty?
+    end
+
+    # イベント名 _event_name_ が、ネットワーク上の何処かでフィルタされているなら真を返す
+    def filtered_in_network?(event_name, root_id = vmid)
+      filtered_in_vm?(event_name) || next_nodes(root_id).any? do |vm|
+        vm.filtered_in_network?(event_name, root_id)
       end
     end
   end
