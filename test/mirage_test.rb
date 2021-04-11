@@ -66,7 +66,7 @@ describe(Pluggaloid::Plugin) do
     assert_equal(b, Pluggaloid::Mirage.unwrap(namespace: l.to_s, id: 'same'))
     assert_equal(c, Pluggaloid::Mirage.unwrap(namespace: l.to_s, id: 'differ'))
     assert_equal(a, Pluggaloid::Mirage.unwrap(namespace: k.to_s, id: 'same'))
-    assert_nil(Pluggaloid::Mirage.unwrap(namespace: k.to_s, id: 'differ'))
+    assert_raises(Pluggaloid::ArgumentError) { Pluggaloid::Mirage.unwrap(namespace: k.to_s, id: 'differ') }
   end
 
   it 'inherit class' do
@@ -95,7 +95,7 @@ describe(Pluggaloid::Plugin) do
     assert_equal(b, Pluggaloid::Mirage.unwrap(namespace: l.to_s, id: 'same'))
     assert_equal(c, Pluggaloid::Mirage.unwrap(namespace: l.to_s, id: 'differ'))
     assert_equal(a, Pluggaloid::Mirage.unwrap(namespace: k.to_s, id: 'same'))
-    assert_nil(Pluggaloid::Mirage.unwrap(namespace: k.to_s, id: 'differ'))
+    assert_raises(Pluggaloid::ArgumentError) { Pluggaloid::Mirage.unwrap(namespace: k.to_s, id: 'differ') }
   end
 
   it 'inherit before include mirage' do
@@ -123,7 +123,7 @@ describe(Pluggaloid::Plugin) do
     assert_equal(b, Pluggaloid::Mirage.unwrap(namespace: l.to_s, id: 'same'))
     assert_equal(c, Pluggaloid::Mirage.unwrap(namespace: l.to_s, id: 'differ'))
     assert_equal(a, Pluggaloid::Mirage.unwrap(namespace: k.to_s, id: 'same'))
-    assert_nil(Pluggaloid::Mirage.unwrap(namespace: k.to_s, id: 'differ'))
+    assert_raises(Pluggaloid::ArgumentError) { Pluggaloid::Mirage.unwrap(namespace: k.to_s, id: 'differ') }
   end
 
 end

@@ -19,9 +19,13 @@ module Pluggaloid
     def self.unwrap(namespace:, id:)
       klass = pluggaloid_mirage_classes[namespace]
       if klass
-        klass.pluggaloid_mirage_repository[id]
+        result = klass.pluggaloid_mirage_repository[id]
+        unless result&.is_a?(Pluggaloid::Mirage) # nilの場合は常にraise
+          raise ArgumentError, "The id `#{id}' was not found."
+        end
+        result
       else
-        raise ArgumentError, "The class `#{namespace}' was not found."
+        raise ArgumentError, "The namespace `#{namespace}' was not found."
       end
     end
 
