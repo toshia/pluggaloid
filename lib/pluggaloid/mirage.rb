@@ -39,7 +39,7 @@ module Pluggaloid
     end
 
     # このClassのなかで、Pluggaloid::Mirageがインスタンスを同定するためのid(String)を返す。
-    # このメソッドではなく、 `_pluggaloid_mirage_id` をoverrideすること
+    # このメソッドではなく、 `generate_pluggaloid_mirage_id` をoverrideすること
     def pluggaloid_mirage_id
       generate_pluggaloid_mirage_id.freeze.tap do |id|
         self.class.pluggaloid_mirage_repository[id] = self
