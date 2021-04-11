@@ -10,6 +10,7 @@ require 'pluggaloid/subscriber'
 require 'pluggaloid/filter'
 require 'pluggaloid/stream_generator'
 require "pluggaloid/handler_tag"
+require 'pluggaloid/mirage'
 require 'pluggaloid/error'
 
 require 'delayer'
