@@ -31,10 +31,13 @@ workflows:
     jobs:
       - build:
           name: 'ruby-2.5'
-          ruby-version: '2.5.7'
+          ruby-version: '2.5.9'
       - build:
           name: 'ruby-2.6'
-          ruby-version: '2.6.5'
+          ruby-version: '2.6.7'
       - build:
           name: 'ruby-2.7'
-          ruby-version: '2.7.0'
+          ruby-version: '2.7.3'
+      - build:
+          name: 'ruby-3.0'
+          ruby-version: '3.0.1'
