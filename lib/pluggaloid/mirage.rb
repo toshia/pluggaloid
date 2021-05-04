@@ -14,6 +14,19 @@ module Pluggaloid
       def pluggaloid_mirage_repository
         @pluggaloid_mirage_repository ||= {}
       end
+
+      # `Pluggaloid::Mirage` をincludeしたClassのnamespaceを返す。
+      # namespaceはStringで、 `Pluggaloid::Mirage` をincludeしたほかのClassと
+      # 重複しない。
+      # 同じClassであれば、別のPluggaloid host(Pluggaloid::VMやプロセス)でも
+      # 同じ値を返す。
+      def pluggaloid_mirage_namespace
+        -to_s
+      end
+
+      def inherited(klass)
+        Mirage.pluggaloid_mirage_classes[klass.pluggaloid_mirage_namespace] = klass
+      end
     end
 
     def self.unwrap(namespace:, id:)
@@ -31,7 +44,7 @@ module Pluggaloid
 
     def self.included(klass)
       klass.extend(Extend)
-      pluggaloid_mirage_classes[klass.to_s] = klass
+      pluggaloid_mirage_classes[klass.pluggaloid_mirage_namespace] = klass
     end
 
     def self.pluggaloid_mirage_classes
@@ -43,8 +56,12 @@ module Pluggaloid
     def pluggaloid_mirage_id
       generate_pluggaloid_mirage_id.freeze.tap do |id|
         self.class.pluggaloid_mirage_repository[id] = self
-        Mirage.pluggaloid_mirage_classes[self.class.to_s] ||= self.class
+        Mirage.pluggaloid_mirage_classes[self.class.pluggaloid_mirage_namespace] ||= self.class
       end
+    end
+
+    def pluggaloid_mirage_namespace
+      self.class.pluggaloid_mirage_namespace
     end
 
     private
